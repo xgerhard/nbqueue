@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Laravel\Lumen\Routing\Controller as BaseController;
+use App\src\QueueHandler;
 
 class CommandController extends BaseController
 {
@@ -14,12 +15,15 @@ class CommandController extends BaseController
             if(!empty($aQuery) && $aAction = $this->getAction($aQuery[0]))
             {
                 array_shift($aQuery);
-                if(isset($aAction['parser']))
-                {
-                    echo  $strMessage = empty($aQuery) ? "" : implode(" ", $aQuery);
-                }
+                $strMessage = empty($aQuery) ? "" : implode(" ", $aQuery);
+                
+                // Set these headers as test for now
+                parse_str('name=xgerhard&displayName=xgerhard&provider=twitch&providerId=00000001', $aChannel);
+                parse_str('name=xgerhard&displayName=xgerhard&provider=twitch&providerId=00000001&userLevel=owner', $aUser);
+
+                $oQH = new QueueHandler($aChannel);
             }
-            else return 'Invalid request';
+            else return 'Invalid action, available actions: add, remove, join, leave, position';
         }
         else return 'Invalid request';
     }
@@ -27,16 +31,15 @@ class CommandController extends BaseController
     public function getAction($strAction)
     {
         $aActions = array(
-            'add' => array('parser' => 'user'),
-            'remove' => array('parser' => 'user'),
-            'join' => array(),
-            'leave' => array(),
-            'position' => array('parser' => 'user'),
-            'open' => array(),
-            'close' => array()
+            'add',
+            'remove',
+            'join' ,
+            'leave',
+            'position',
+            'open',
+            'close'
         );
-
-        if(isset($aActions[$strAction])) return $aActions[$strAction];
+        if(in_array($strAction, $aActions)) return true;
         return false;
     }
 }
