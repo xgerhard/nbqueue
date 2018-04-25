@@ -52,9 +52,8 @@ class CommandController extends BaseController
                         break;
 
                         case 'next5':
-                        {
                             return $oQH->getListQueue(5);
-                        }
+                        break;
                     }
                 }
                 //catch(\Exception $e)
