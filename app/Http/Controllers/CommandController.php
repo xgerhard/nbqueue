@@ -54,6 +54,10 @@ class CommandController extends BaseController
                         case 'next5':
                             return $oQH->getListQueue(5);
                         break;
+
+                        case 'clear':
+                            return $oQH->clearQueue();
+                        break;
                     }
                 }
                 //catch(\Exception $e)
@@ -79,7 +83,8 @@ class CommandController extends BaseController
             'open',
             'close',
             'next',
-            'next5'
+            'next5',
+            'clear'
         );
         if(in_array($strAction, $aActions)) return $strAction;
         return false;

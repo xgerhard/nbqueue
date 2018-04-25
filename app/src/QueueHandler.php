@@ -26,6 +26,24 @@ class QueueHandler
         if(!$this->start($aChannel)) throw new Exception(ERR_DEFAULT);
     }
 
+    /**
+     * Clears the current queue
+     *
+     * @return string
+    */
+    public function clearQueue()
+    {
+        if(!$this->u->isModerator) return ERR_NO_MOD;
+
+        DB::table('queue_users')->where('queue_id', '=', $this->c->active)->delete();
+        return 'Succesfully cleared the queue'. $this->queueDisplayName;
+    }
+
+    /**
+     * Get next X persons from queue
+     *
+     * @return string
+    */
     public function getListQueue($iLimit = 5)
     {
         $aQueueUsers = QueueUser::where([
