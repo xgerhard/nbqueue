@@ -143,7 +143,12 @@ class QueueHandler
                         SELECT GROUP_CONCAT(
                             created_at ORDER BY created_at ASC
                         )
-                        FROM queue_users
+                        FROM
+                            queue_users
+                        WHERE
+                            queue_id = :quid
+                        AND
+                            user_id = :usid
                     )
                 ) AS position
             FROM
@@ -154,7 +159,7 @@ class QueueHandler
                 user_id = :uid
             LIMIT 1
         ',
-        ['qid' => $this->q->id, 'uid' => $this->u->id]);
+        ['qid' => $this->q->id, 'uid' => $this->u->id, 'quid' => $this->q->id, 'usid' => $this->u->id]);
 
         if(isset($qPosition[0]))
         {
