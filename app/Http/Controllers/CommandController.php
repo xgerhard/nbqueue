@@ -12,16 +12,56 @@ class CommandController extends BaseController
         if($request->has('q'))
         {
             $aQuery = explode(" ", trim($request->input('q')));
-            if(!empty($aQuery) && $aAction = $this->getAction($aQuery[0]))
+            if(!empty($aQuery) && $strAction = $this->getAction($aQuery[0]))
             {
                 array_shift($aQuery);
                 $strMessage = empty($aQuery) ? "" : implode(" ", $aQuery);
-                
+
                 // Set these headers as test for now
                 parse_str('name=xgerhard&displayName=xgerhard&provider=twitch&providerId=00000001', $aChannel);
-                parse_str('name=xgerhard&displayName=xgerhard&provider=twitch&providerId=00000001&userLevel=owner', $aUser);
+                parse_str('name=xgerhard2&displayName=xgerhard2&provider=twitch&providerId=00000002&userLevel=owner', $aUser);
 
-                $oQH = new QueueHandler($aChannel);
+                try{
+                    $oQH = new QueueHandler($aChannel);
+                    $oQH->setUser($aUser);
+
+                    switch($strAction)
+                    {
+                        case 'join':
+                            return $oQH->joinQueue($strMessage);
+                        break;
+
+                        case 'leave':
+                            return $oQH->leaveQueue();
+                        break;
+                        
+                        case 'position':
+                            return $oQH->getPosition();
+                        break;
+
+                        case 'open':
+                            return $oQH->openQueue();
+                        break;
+
+                        case 'close':
+                            return $oQH->closeQueue();
+                        break;
+
+                        case 'next':
+                            return $oQH->getNextPerson();
+                        break;
+
+                        case 'next5':
+                        {
+                            return $oQH->getListQueue(5);
+                        }
+                    }
+                }
+                //catch(\Exception $e)
+                catch(Exception $e)
+                {
+                    dd($e);
+                }
             }
             else return 'Invalid action, available actions: add, remove, join, leave, position';
         }
@@ -30,6 +70,7 @@ class CommandController extends BaseController
 
     public function getAction($strAction)
     {
+        $strAction = strtolower(trim($strAction));
         $aActions = array(
             'add',
             'remove',
@@ -37,9 +78,11 @@ class CommandController extends BaseController
             'leave',
             'position',
             'open',
-            'close'
+            'close',
+            'next',
+            'next5'
         );
-        if(in_array($strAction, $aActions)) return true;
+        if(in_array($strAction, $aActions)) return $strAction;
         return false;
     }
 }
