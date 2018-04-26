@@ -58,6 +58,14 @@ class CommandController extends BaseController
                         case 'clear':
                             return $oQH->clearQueue();
                         break;
+
+                        case 'delq':
+                            return $oQH->deleteQueue($strMessage);
+                        break;
+
+                        case 'delq':
+                            return $oQH->deleteQueue($strMessage);
+                        break;
                     }
                 }
                 //catch(\Exception $e)

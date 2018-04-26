@@ -31,11 +31,11 @@ class QueueHandler
      *
      * @return string
     */
-    public function clearQueue()
+    public function clearQueue($iQueueId = false)
     {
         if(!$this->u->isModerator) return ERR_NO_MOD;
 
-        DB::table('queue_users')->where('queue_id', '=', $this->c->active)->delete();
+        DB::table('queue_users')->where('queue_id', '=', ($iQueueId === false ? $this->c->active : $iQueueId))->delete();
         return 'Succesfully cleared the queue'. $this->queueDisplayName;
     }
 
@@ -318,21 +318,21 @@ class QueueHandler
     /**
      * Adds a queue for a channel, return the new queue on success
      *
-     * @return boolean
+     * @return object | boolean
     */
     public function addQueue($strName, $iOpen = 0)
     {
         if(!$this->u->isModerator) return ERR_NO_MOD;
 
         $oQueue = Queue::where([
-            ['id', '=', $this->c->id],
+            ['channel_id', '=', $this->c->id],
             ['name', '=', $strName]
         ])->first();
 
         if(!$oQueue)
         {
             $oQueue = Queue::create([
-                'id' => $this->c->id,
+                'channel_id' => $this->c->id,
                 'name' => $strName,
                 'is_open' => ($iOpen == 0 ? 0 : 1)
             ]);
@@ -340,6 +340,32 @@ class QueueHandler
 
         if($oQueue) return $oQueue;
         return false;
+    }
+
+    /**
+     * Deletes a queue for a channel, clears the queue before deleting
+     *
+     * @return string
+    */
+    public function deleteQueue($strName)
+    {
+        if(!$this->u->isModerator) return ERR_NO_MOD;
+
+        $oQueue = Queue::where([
+            ['channel_id', '=', $this->c->id],
+            ['name', '=', $strName]
+        ])->first();
+
+        if($oQueue)
+        {
+            $this->clearQueue($oQueue->id);
+            $oQueue->forceDelete();
+            return 'Succesfully deleted queue "'. $strName.'"';
+        }
+        else
+        {
+            return 'Unable to delete queue "'. $strName .'", queue doesn\'t exist';
+        }
     }
 }
 ?>
