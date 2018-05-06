@@ -5,6 +5,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Queue extends Model 
 {
+    public $displayName;
+
     /**
      * The attributes that are mass assignable.
      *

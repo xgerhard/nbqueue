@@ -34,7 +34,7 @@ class CommandController extends BaseController
                         case 'leave':
                             return $oQH->leaveQueue();
                         break;
-                        
+
                         case 'position':
                             return $oQH->getPosition();
                         break;
@@ -48,23 +48,35 @@ class CommandController extends BaseController
                         break;
 
                         case 'next':
-                            return $oQH->getNextPerson();
-                        break;
-
-                        case 'next5':
-                            return $oQH->getListQueue(5);
+                            return $oQH->getNext((int) $strMessage);
                         break;
 
                         case 'clear':
                             return $oQH->clearQueue();
                         break;
 
-                        case 'delq':
+                        case 'del':
                             return $oQH->deleteQueue($strMessage);
                         break;
 
-                        case 'delq':
-                            return $oQH->deleteQueue($strMessage);
+                        case 'set':
+                            return $oQH->setQueue($strMessage);
+                        break;
+
+                        case 'add':
+                            return $oQH->addQueue($strMessage, 1, true);
+                        break;
+
+                        case 'info':
+                            return $oQH->info();
+                        break;
+
+                        case 'help':
+                            return 'Please see www.url.com for more info on usage';
+                        break;
+
+                        default:
+                            return 'Unknown command, please see www.url.com for more info on usage';
                         break;
                     }
                 }
@@ -84,15 +96,17 @@ class CommandController extends BaseController
         $strAction = strtolower(trim($strAction));
         $aActions = array(
             'add',
-            'remove',
+            'set',
+            'del',
+            'list',
             'join' ,
             'leave',
             'position',
             'open',
             'close',
             'next',
-            'next5',
-            'clear'
+            'clear',
+            'info'
         );
         if(in_array($strAction, $aActions)) return $strAction;
         return false;

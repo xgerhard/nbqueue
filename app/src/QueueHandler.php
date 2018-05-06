@@ -15,7 +15,6 @@ class QueueHandler
     private $q = null;
     private $c = null;
     private $u = null;
-    private $queueDisplayName; // Don't really like this, but it's w/e for now
 
     /**
      * Runs 'start' function on load, we need to have a channel and queue object to start
@@ -24,6 +23,18 @@ class QueueHandler
     public function __construct($aChannel)
     {
         if(!$this->start($aChannel)) throw new Exception(ERR_DEFAULT);
+    }
+
+    /**
+     * Returns current queue info
+     *
+    */
+    public function info()
+    {
+        $iCount = QueueUser::where([
+            ['queue_id', '=', $this->c->active]
+        ])->count();
+        return 'Current queue: \''. $this->q->name .'\', the queue is currently '. ($this->q->is_open == 1 ? 'open' : 'closed') .' and contains '. $iCount .' user'. ($iCount == 1 ? '' : 's') .'.';
     }
 
     /**
@@ -36,11 +47,11 @@ class QueueHandler
         if(!$this->u->isModerator) return ERR_NO_MOD;
 
         DB::table('queue_users')->where('queue_id', '=', ($iQueueId === false ? $this->c->active : $iQueueId))->delete();
-        return 'Succesfully cleared the queue'. $this->queueDisplayName;
+        return 'Succesfully cleared the queue'. $this->q->displayName;
     }
 
     /**
-     * Get next X persons from queue
+     * List next X persons from queue
      *
      * @return string
     */
@@ -64,29 +75,51 @@ class QueueHandler
             {
                 $aUsers[] = $oQueueUser->user->displayName;
             }
-            return 'Next '. (count($aUsers) > 1 ? count($aUsers) .' persons' : 'person') .' in the queue'. $this->queueDisplayName .': '. implode(", ", $aUsers);
+            return 'Next '. (count($aUsers) > 1 ? count($aUsers) .' persons' : 'person') .' in the queue'. $this->q->displayName .': '. implode(", ", $aUsers);
         }
     }
 
     /**
-     * Get next person from queue
+     * Get next X person from queue
      *
      * @return string
     */
-    public function getNextPerson()
+    public function getNext($iLimit = 1)
     {
         if(!$this->u->isModerator) return ERR_NO_MOD;
 
-        $oQueueUser = QueueUser::where([
+        $iChars = 0;
+        $iCharLimit = 150;
+        $iLimit = (int) $iLimit;
+        if($iLimit == 0) $iLimit = 1;
+        if($iLimit > 10) $iLimit = 10; // Max
+
+        $aQueueUsers = QueueUser::where([
             ['queue_id', '=', $this->c->active]
         ])
-        ->orderBy('created_at', 'desc')
-        ->first();
+        ->orderBy('created_at', 'asc')
+        ->limit($iLimit)
+        ->get();
 
-        if(!$oQueueUser) return 'Unable to get next person, queue'. $this->queueDisplayName .' is empty';
-        $oQueueUser->forceDelete();
-
-        return 'Next person in queue'. $this->queueDisplayName .' is: '. $oQueueUser->user->displayName . (trim($oQueueUser->message) == "" ? "" : ', with message: "'. $oQueueUser->message .'"');
+        if(!$aQueueUsers || $aQueueUsers->isEmpty())
+        {
+            return 'Unable to list queue'. ($this->q->displayName ? ' \''. $this->q->displayName .'\'' : '') .', queue is empty';
+        }
+        else
+        {
+            $aUsers = [];
+            foreach($aQueueUsers AS $oQueueUser)
+            {
+                $strTempRes = $oQueueUser->user->displayName . (trim($oQueueUser->message) == "" ? "" : ', with message: "'. $oQueueUser->message .'"');
+                if(($iChars + strlen($strTempRes)) <= $iCharLimit)
+                {
+                    $aUsers[] = $strTempRes;
+                    $iChars = $iChars + strlen($strTempRes);
+                    $oQueueUser->forceDelete();
+                }
+            }
+            return 'Next '. (count($aUsers) > 1 ? count($aUsers) .' persons' : 'person') .' in the queue'. $this->q->displayName .': '. implode(", ", $aUsers);
+        }
     }
 
     /**
@@ -102,9 +135,9 @@ class QueueHandler
         {
             $this->q->is_open = 1;
             $this->q->save();
-            return 'Queue'. $this->queueDisplayName .' is now open';
+            return 'Queue'. $this->q->displayName .' is now open';
         }
-        else return 'Queue'. $this->queueDisplayName .' is already open';
+        else return 'Queue'. $this->q->displayName .' is already open';
     }
 
     /**
@@ -121,9 +154,9 @@ class QueueHandler
             $this->q->is_open = 0;
             $this->q->save();
 
-            return 'Queue'. $this->queueDisplayName .' is now closed';
+            return 'Queue'. $this->q->displayName .' is now closed';
         }
-        else return 'Queue'. $this->queueDisplayName .' is already closed';
+        else return 'Queue'. $this->q->displayName .' is already closed';
     }
 
     /**
@@ -163,9 +196,9 @@ class QueueHandler
 
         if(isset($qPosition[0]))
         {
-            return ($bFull === true ? 'Your current position in queue'. $this->queueDisplayName .' is: ' : '') . $qPosition[0]->position;
+            return ($bFull === true ? 'Your current position in the queue'. $this->q->displayName .' is: ' : '') . $qPosition[0]->position;
         }
-        else return 'Cannot get position, you are not in queue'. $this->queueDisplayName;
+        else return 'Cannot get position, you are not in the queue'. $this->q->displayName;
     }
 
     /**
@@ -175,8 +208,9 @@ class QueueHandler
     */
     public function joinQueue($strMessage)
     {
-        if(!$this->q->is_open) return 'The queue'. $this->queueDisplayName .' is currently closed';
+        if(!$this->q->is_open) return 'The queue'. $this->q->displayName .' is currently closed';
         if(!$this->u) throw new Exception(ERR_NO_USER);
+        if(strlen($strMessage) > 50) return 'Error: Max length of user message is 50';
 
         $oQueueUser = QueueUser::where([
             ['user_id', '=', $this->u->id],
@@ -189,9 +223,9 @@ class QueueHandler
             {
                 $oQueueUser->message = $strMessage;
                 $oQueueUser->save();
-                return 'You are already in queue'. $this->queueDisplayName .' (#'. $this->getPosition(false) .'), your queue message has been updated';
+                return 'You are already in queue'. $this->q->displayName .' (#'. $this->getPosition(false) .'), your queue message has been updated';
             }
-            else return 'You are already in queue'. $this->queueDisplayName .' (#'. $this->getPosition(false) .')';
+            else return 'You are already in queue'. $this->q->displayName .' (#'. $this->getPosition(false) .')';
         }
         else
         {
@@ -201,7 +235,7 @@ class QueueHandler
                 'message' => $strMessage
             ]);
 
-            if($oQueueUser) return 'Succesfully added to queue'. $this->queueDisplayName;
+            if($oQueueUser) return 'Succesfully added to queue'. $this->q->displayName;
         }
     }
 
@@ -215,18 +249,18 @@ class QueueHandler
         if(!$this->u) throw new Exception(ERR_NO_USER);
 
         $oQueueUser = QueueUser::where([
-            ['user_id', '=', $this->u->provider_id],
+            ['user_id', '=', $this->u->id],
             ['queue_id', '=', $this->c->active]
         ])->first();
 
         if($oQueueUser)
         {
             $oQueueUser->forceDelete();
-            return 'Succesfully removed from queue'. $this->queueDisplayName;
+            return 'Succesfully removed from queue'. $this->q->displayName;
         }
         else
         {
-            return 'Unable to leave, you are not in queue'. $this->queueDisplayName;
+            return 'Unable to leave, you are not in queue'. $this->q->displayName;
         }
     }
 
@@ -271,10 +305,10 @@ class QueueHandler
 
         if($this->q && $this->c)
         {
-            $this->queueDisplayName = $this->q->name == 'default' ? '' : ' "'. ucfirst($this->q->name) .'"';
-            
-            $oChannel->setAttribute('name', $aChannel['name']);
-            $oChannel->setAttribute('displayName', $aChannel['displayName']);
+            $this->q->displayName = $this->q->name == 'default' ? '' : ' "'. ucfirst($this->q->name) .'"';
+
+            $oChannel->name = $aChannel['name'];
+            $oChannel->displayName = $aChannel['displayName'];
             return true;
         }
         return false;
@@ -311,7 +345,7 @@ class QueueHandler
             }
         }
 
-        $oUser->setAttribute('isModerator', ($aUser['userLevel'] == 'owner' || $aUser['userLevel'] == 'moderator'));
+        $oUser->isModerator = ($aUser['userLevel'] == 'owner' || $aUser['userLevel'] == 'moderator');
         $this->u = $oUser;
     }
 
@@ -320,9 +354,10 @@ class QueueHandler
      *
      * @return object | boolean
     */
-    public function addQueue($strName, $iOpen = 0)
+    public function addQueue($strName, $iOpen = 0, $bText = false)
     {
         if(!$this->u->isModerator) return ERR_NO_MOD;
+        if(trim($strName) == "") return 'No queue name specified to add';
 
         $oQueue = Queue::where([
             ['channel_id', '=', $this->c->id],
@@ -337,9 +372,17 @@ class QueueHandler
                 'is_open' => ($iOpen == 0 ? 0 : 1)
             ]);
         }
+        elseif($bText) return 'Queue "'. $strName .'" already exists';
 
-        if($oQueue) return $oQueue;
-        return false;
+        if($bText === false)
+        {
+            if($oQueue) return $oQueue;
+            return false;
+        }
+        elseif($oQueue)
+        {
+            return 'Succesfully added queue "'. $strName .'"';
+        }
     }
 
     /**
@@ -350,6 +393,8 @@ class QueueHandler
     public function deleteQueue($strName)
     {
         if(!$this->u->isModerator) return ERR_NO_MOD;
+        if(trim($strName) == "") return 'No queue name specified to delete';
+        if(strtolower(trim($strName)) == 'default') return 'Cannot delete the \'default\' queue';
 
         $oQueue = Queue::where([
             ['channel_id', '=', $this->c->id],
@@ -358,6 +403,21 @@ class QueueHandler
 
         if($oQueue)
         {
+            if($this->c->active == $oQueue->id)
+            {
+                // were deleting the current active queue so we have to set the default queue active again
+                $oDefaultQueue = Queue::where([
+                    ['channel_id', '=', $this->c->id],
+                    ['name', '=', 'default']
+                ])->first();
+
+                if($oDefaultQueue)
+                {
+                    $this->c->active = $oDefaultQueue->id;
+                    $this->c->save();
+                }
+            }
+
             $this->clearQueue($oQueue->id);
             $oQueue->forceDelete();
             return 'Succesfully deleted queue "'. $strName.'"';
@@ -365,6 +425,28 @@ class QueueHandler
         else
         {
             return 'Unable to delete queue "'. $strName .'", queue doesn\'t exist';
+        }
+    }
+
+    public function setQueue($strName)
+    {
+        if(!$this->u->isModerator) return ERR_NO_MOD;
+        if(trim($strName) == "") return 'No queue name specified to set active';
+
+        $oQueue = Queue::where([
+            ['channel_id', '=', $this->c->id],
+            ['name', '=', $strName]
+        ])->first();
+
+        if($oQueue)
+        {
+            $this->c->active = $oQueue->id;
+            $this->c->save();
+            return 'Queue "'. $strName .'" is now the active queue';
+        }
+        else
+        {
+            return 'Unable to set queue "'. $strName .'", queue doesn\'t exist'; 
         }
     }
 }
