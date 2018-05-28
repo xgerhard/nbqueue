@@ -18,7 +18,7 @@ class CommandController extends BaseController
                 array_shift($aQuery);
                 $strMessage = empty($aQuery) ? "" : implode(" ", $aQuery);
                 
-                $oNightbot = new Nightbot;
+                $oNightbot = new Nightbot($request);
                 if(!$oNightbot->isNightbotRequest())
                 {
                     return 'This command only works through Nightbot.';
