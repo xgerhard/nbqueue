@@ -10,8 +10,44 @@
 | and give it the Closure to call when that URI is requested.
 |
 */
+use App\src\Channel;
+use App\src\Queue;
+use App\src\QueueUser;
+
+$router->get('auth/{service}', 'AuthController@AuthHandler');
+
+$router->get('install/auto', 'InstallController@startAuto');
+$router->post('install/auto', 'InstallController@installAuto');
+$router->get('install/manual', 'InstallController@startManual');
 
 $router->get('/', 'CommandController@QueryParser');
+
+$router->get('list/{id}', function ($id)
+{
+    $oChannel = Channel::findOrFail((int) $id);
+    if($oChannel)
+    {
+        $aQueues = Queue::where([
+            ['channel_id', '=', $oChannel->id]
+        ])->get();
+
+        if($aQueues && $aQueues->isNotEmpty())
+        {
+            foreach($aQueues AS $oQueue)
+            {
+                $aQueueUsers = QueueUser::where([
+                    ['queue_id', '=', $oQueue->id]
+                ])->get();
+
+                if($aQueueUsers && $aQueueUsers->isNotEmpty())
+                {
+                    $oQueue->users = $aQueueUsers;
+                }
+            }
+        }
+        return view('list', ['queues' => $aQueues]);
+    }
+});
 
 /*$router->get('/', function () use ($router) {
     return $router->app->version();
