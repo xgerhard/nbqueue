@@ -1,6 +1,8 @@
 # nbqueue
 
-A basic queue system for Nightbot.
+A basic queue system for Nightbot. The usage is pretty straight forward, `!join` and `!leave` for users to enter or leave the queue, the user can check their position in the queue with `!position`. Moderators can `!open` or `!close` the queue and pick a user from the queue with `!next`.
+
+The command supports multiple queues, but there can only be one active. Only the active channel is joinable. Moderators can manage queues by using `!add $queueName` or `!del $queueName`, to switch to a different queue use `!set $queueName`. To empty the queue a moderator can use `!clear`, or remove one user by using `!remove $id`, where $id is the ID of the user in that specific queue (this ID can be found by using `!list`).
 
 ## User commands
 * __join $message__ - Joines the current queue with optional message "$message", this message is displayed when the user will be picked from the queue
@@ -23,7 +25,7 @@ A basic queue system for Nightbot.
 Sign in with Nightbot here, the installer will add the selected commands to Nightbot: https://dev.2g.be/twitch/nbqueue/public/install/auto
 
 ## Improvements?
-* In the current system the user can only join the active queue. Since the system supports multiple queues, maybe add a parameter to join another queue (if they are open). However there will need to be a good syntax for it first, since everything after !join is currently saved as message, for example to store their gamertag. Maybe something like '!join "$queue" $message' - '!join "fortnite" xgerhard'.
+* In the current system the user can only join the active queue. Since the system supports multiple queues, maybe add a parameter to join another queue (if they are open). However there will need to be a good syntax for it first, since everything after !join is currently saved as message, for example to store their gamertag. Maybe something like `!join "$queue" $message` - `!join "fortnite" xgerhard`.
 * When a user is picked, the user will be removed from the database. If the user is not there, the user will lose the spot. Maybe add an option to skip a user, not sure how to handle this yet database wise.
 * The queue system currently identifies users by their Id's provided in the Nightbot headers, this means that the only way to join a queue is by typing the join command, a moderator can't add users, which might be a good thing?
 * Nightbot has a minimum of 5 sec cooldown on commands, if a big chat will spam !join - some messages will be ignored, the only way a user knows if he/she joined succesfull is if they get a response from Nightbot with a success message. This might be spammy if alot of users want to enter, however if I dont send the confirmation people wouldn't know if they entered.
