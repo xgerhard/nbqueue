@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Laravel\Lumen\Routing\Controller as BaseController;
 use App\src\QueueHandler;
+use xgerhard\nbheaders\Nightbot;
 
 class CommandController extends BaseController
 {
@@ -16,14 +17,16 @@ class CommandController extends BaseController
             {
                 array_shift($aQuery);
                 $strMessage = empty($aQuery) ? "" : implode(" ", $aQuery);
-
-                // Set these headers as test for now
-                parse_str('name=xgerhard&displayName=xgerhard&provider=twitch&providerId=00000001', $aChannel);
-                parse_str('name=xgerhard2&displayName=xgerhard2&provider=twitch&providerId=00000002&userLevel=owner', $aUser);
+                
+                $oNightbot = new Nightbot;
+                if(!$oNightbot->isNightbotRequest())
+                {
+                    return 'This command only works through Nightbot.';
+                }
 
                 try{
-                    $oQH = new QueueHandler($aChannel);
-                    $oQH->setUser($aUser);
+                    $oQH = new QueueHandler($oNightbot->getChannel());
+                    if($oNightbot->getUser()) $oQH->setUser($oNightbot->getUser());
 
                     switch($strAction)
                     {
@@ -37,6 +40,14 @@ class CommandController extends BaseController
 
                         case 'position':
                             return $oQH->getPosition();
+                        break;
+
+                        case 'list':
+                            return $oQH->getList();
+                        break;
+
+                        case 'info':
+                            return $oQH->info();
                         break;
 
                         case 'open':
@@ -55,6 +66,10 @@ class CommandController extends BaseController
                             return $oQH->clearQueue();
                         break;
 
+                        case 'add':
+                            return $oQH->addQueue($strMessage, 1, true);
+                        break;
+
                         case 'del':
                             return $oQH->deleteQueue($strMessage);
                         break;
@@ -63,12 +78,8 @@ class CommandController extends BaseController
                             return $oQH->setQueue($strMessage);
                         break;
 
-                        case 'add':
-                            return $oQH->addQueue($strMessage, 1, true);
-                        break;
-
-                        case 'info':
-                            return $oQH->info();
+                        case 'remove':
+                            return $oQH->removeQueueUser($strMessage);
                         break;
 
                         case 'help':
@@ -106,7 +117,8 @@ class CommandController extends BaseController
             'close',
             'next',
             'clear',
-            'info'
+            'info',
+            'remove'
         );
         if(in_array($strAction, $aActions)) return $strAction;
         return false;
