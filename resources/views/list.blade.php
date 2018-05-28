@@ -8,14 +8,14 @@
 </head>
 <body>
 <div class="container">
-    <h1>Queue list:</h1>
+    <h1>Queue list: {{$name}}</h1>
     @if(isset($queues) && !empty($queues))
     @foreach($queues as $queue)
     <div class="panel-group">
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h4 class="panel-title">
-                    <a data-toggle="collapse" href="#c{{$queue->id}}">Queue: <b>{{$queue->name}}</b></a>
+                    <a data-toggle="collapse" href="#c{{$queue->id}}">Queue: <b>{{$queue->name}}</b>@if($queue->id == $channel->active), status: <b> @if($queue->is_open == 1)Open @else Closed @endif </b>@endif</a>
                 </h4>
             </div>
             <div id="c{{$queue->id}}" class="panel-collapse collapse">

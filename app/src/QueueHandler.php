@@ -47,7 +47,7 @@ class QueueHandler
     */
     public function getList()
     {
-        return $this->returnText('Full list of users and queues can be found here: '. url('list/'.  $this->c->id));
+        return $this->returnText('Full list of users and queues can be found here: '. url('list/'.  $this->c->id .'/'. $this->c->name));
     }
 
     /**

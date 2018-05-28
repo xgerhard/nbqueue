@@ -22,7 +22,7 @@ $router->get('install/manual', 'InstallController@startManual');
 
 $router->get('/', 'CommandController@QueryParser');
 
-$router->get('list/{id}', function ($id)
+$router->get('list/{id}/{name}', function ($id, $name)
 {
     $oChannel = Channel::findOrFail((int) $id);
     if($oChannel)
@@ -45,7 +45,7 @@ $router->get('list/{id}', function ($id)
                 }
             }
         }
-        return view('list', ['queues' => $aQueues]);
+        return view('list', ['queues' => $aQueues, 'channel' => $oChannel, 'name' => $name]);
     }
 });
 
