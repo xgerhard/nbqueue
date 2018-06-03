@@ -37,7 +37,9 @@ $router->get('list/{id}/{name}', function ($id, $name)
             {
                 $aQueueUsers = QueueUser::where([
                     ['queue_id', '=', $oQueue->id]
-                ])->get();
+                ])
+                ->orderBy('created_at', 'asc')
+                ->get();
 
                 if($aQueueUsers && $aQueueUsers->isNotEmpty())
                 {
