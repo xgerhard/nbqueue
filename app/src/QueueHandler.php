@@ -38,7 +38,25 @@ class QueueHandler
         $iCount = QueueUser::where([
             ['queue_id', '=', $this->c->active]
         ])->count();
-        return $this->returnText('Current queue: \''. $this->q->name .'\', the queue is currently '. ($this->q->is_open == 1 ? 'open' : 'closed') .' and contains '. $iCount .' user'. ($iCount == 1 ? '' : 's'));
+
+        $strRes = 'Current queue: \''. $this->q->name .'\', the queue is currently '. ($this->q->is_open == 1 ? 'open' : 'closed') .' and contains '. $iCount .' user'. ($iCount == 1 ? '' : 's');
+
+        // List available queues
+        $aQueues = Queue::where([
+            ['channel_id', '=', $this->c->id],
+            ['id', '!=', $this->q->id]
+        ])->get();
+
+        if($aQueues && !$aQueues->isEmpty())
+        {
+            foreach($aQueues AS $oQueue)
+            {
+                $aQueueNames[] = $oQueue->name;
+            }
+            $strRes .= ". Available queues: [". implode(", ", $aQueueNames) ."]";
+        }
+
+        return $this->returnText($strRes);
     }
 
     /**
@@ -193,8 +211,6 @@ class QueueHandler
                             queue_users
                         WHERE
                             queue_id = :quid
-                        AND
-                            user_id = :usid
                     )
                 ) AS position
             FROM
@@ -205,7 +221,7 @@ class QueueHandler
                 user_id = :uid
             LIMIT 1
         ',
-        ['qid' => $this->q->id, 'uid' => $this->u->id, 'quid' => $this->q->id, 'usid' => $this->u->id]);
+        ['qid' => $this->q->id, 'uid' => $this->u->id, 'quid' => $this->q->id]);
 
         if(isset($qPosition[0]))
         {
@@ -236,9 +252,9 @@ class QueueHandler
             {
                 $oQueueUser->message = $strMessage;
                 $oQueueUser->save();
-                return $this->returnText('You are already in queue'. $this->q->displayName .' (#'. $this->getPosition(false) .'), your queue message has been updated');
+                return $this->returnText('You are already in queue'. $this->q->displayName .' (position #'. $this->getPosition(false) .'), your queue message has been updated');
             }
-            else return $this->returnText('You are already in queue'. $this->q->displayName .' (#'. $this->getPosition(false) .')');
+            else return $this->returnText('You are already in queue'. $this->q->displayName .' (position #'. $this->getPosition(false) .')');
         }
         else
         {
@@ -248,7 +264,7 @@ class QueueHandler
                 'message' => $strMessage
             ]);
 
-            if($oQueueUser) return $this->returnText('Succesfully added to queue'. $this->q->displayName);
+            if($oQueueUser) return $this->returnText('Succesfully added to queue'. $this->q->displayName . ', your position is #'. $this->getPosition(false));
         }
     }
 
