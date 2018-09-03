@@ -18,7 +18,7 @@
                     <a data-toggle="collapse" href="#c{{$queue->id}}">Queue: <b>{{$queue->name}}</b>@if($queue->id == $channel->active), status: <b> @if($queue->is_open == 1)Open @else Closed @endif </b>@endif</a>
                 </h4>
             </div>
-            <div id="c{{$queue->id}}" class="panel-collapse collapse">
+            <div id="c{{$queue->id}}" class="panel-collapse collapse @if($queue->id == $channel->active && $queue->is_open == 1)in @endif">
                 <ul class="list-group">
                     @if(isset($queue->users) && !empty($queue->users))
                     @foreach($queue->users as $i => $user)
