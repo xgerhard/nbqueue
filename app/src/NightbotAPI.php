@@ -63,7 +63,10 @@ class NightbotAPI
         if(isset($oResponseBody->status) && $oResponseBody->status == 200)
             return $oResponseBody;
         else
+        {
+            if(isset($oResponseBody->message)) Log::error($oResponseBody->message);
             throw new Exception('Something went wrong..');
+        }
     }
 }
 ?>
