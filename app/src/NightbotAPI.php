@@ -3,6 +3,7 @@ namespace App\src;
 
 use GuzzleHttp\Client;
 use Exception;
+use Log;
 
 class NightbotAPI
 {
