@@ -75,7 +75,7 @@ class QueueHandler
     */
     public function clearQueue($iQueueId = false)
     {
-        if(!$this->u->isModerator) return $this->returnText(ERR_NO_MOD);
+        if(!$this->u->isModerator) return $this->returnText(self::ERR_NO_MOD);
 
         DB::table('queue_users')->where('queue_id', '=', ($iQueueId === false ? $this->c->active : $iQueueId))->delete();
         return $this->returnText('Succesfully cleared the queue'. $this->q->displayName);
@@ -117,7 +117,7 @@ class QueueHandler
     */
     public function getNext($iLimit = 1)
     {
-        if(!$this->u->isModerator) return $this->returnText(ERR_NO_MOD);
+        if(!$this->u->isModerator) return $this->returnText(self::ERR_NO_MOD);
 
         $iChars = 0;
         $iCharLimit = 150;
@@ -160,7 +160,7 @@ class QueueHandler
     */
     public function openQueue()
     {
-        if(!$this->u->isModerator) return $this->returnText(ERR_NO_MOD);
+        if(!$this->u->isModerator) return $this->returnText(self::ERR_NO_MOD);
 
         if($this->q->is_open == 0)
         {
@@ -178,7 +178,7 @@ class QueueHandler
     */
     public function closeQueue()
     {
-        if(!$this->u->isModerator) return $this->returnText(ERR_NO_MOD);
+        if(!$this->u->isModerator) return $this->returnText(self::ERR_NO_MOD);
 
         if($this->q->is_open == 1)
         {
@@ -238,7 +238,7 @@ class QueueHandler
     public function joinQueue($strMessage)
     {
         if(!$this->q->is_open) return 'The queue'. $this->q->displayName .' is currently closed';
-        if(!$this->u) throw new Exception(ERR_NO_USER);
+        if(!$this->u) throw new Exception(self::ERR_NO_USER);
         if(strlen($strMessage) > 50) return $this->returnText('Error: Max length of user message is 50');
 
         $oQueueUser = QueueUser::where([
@@ -275,7 +275,7 @@ class QueueHandler
     */
     public function leaveQueue()
     {
-        if(!$this->u) return $this->returnText(ERR_NO_USER);
+        if(!$this->u) return $this->returnText(self::ERR_NO_USER);
 
         $oQueueUser = QueueUser::where([
             ['user_id', '=', $this->u->id],
@@ -385,7 +385,7 @@ class QueueHandler
     */
     public function addQueue($strName, $iOpen = 0, $bText = false)
     {
-        if($bText && !$this->u->isModerator) return $this->returnText(ERR_NO_MOD);
+        if($bText && !$this->u->isModerator) return $this->returnText(self::ERR_NO_MOD);
         if(trim($strName) == "") return $this->returnText('No queue name specified to add');
 
         $oQueue = Queue::where([
@@ -421,7 +421,7 @@ class QueueHandler
     */
     public function deleteQueue($strName)
     {
-        if(!$this->u->isModerator) return $this->returnText(ERR_NO_MOD);
+        if(!$this->u->isModerator) return $this->returnText(self::ERR_NO_MOD);
         if(trim($strName) == "") return $this->returnText('No queue name specified to delete');
         if(strtolower(trim($strName)) == 'default') return $this->returnText('Cannot delete the \'default\' queue');
 
@@ -464,7 +464,7 @@ class QueueHandler
     */
     public function setQueue($strName)
     {
-        if(!$this->u->isModerator) return $this->returnText(ERR_NO_MOD);
+        if(!$this->u->isModerator) return $this->returnText(self::ERR_NO_MOD);
         if(trim($strName) == "") return $this->returnText('No queue name specified to set active');
 
         $oQueue = Queue::where([
