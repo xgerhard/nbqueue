@@ -15,7 +15,8 @@ class Queue extends Model
     protected $fillable = [
         'name',
         'is_open',
-        'channel_id'
+        'channel_id',
+        'user_level'
     ];    
 }
 ?>

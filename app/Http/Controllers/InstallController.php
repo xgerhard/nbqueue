@@ -198,6 +198,12 @@ class InstallController extends BaseController
                 'description' => 'Deletes user from queue by ID, this ID can be found when opening the full list in browser (list command). Usage example: "!remove 1".',
                 'code' => 'remove $(querystring)',
                 'mod' => true
+            ],
+            'userlevel' => [
+                'name' => '!userlevel',
+                'description' => 'Sets the UserLevel of the current current. Available userlevels: moderator, regular, subscriber, vip, everyone. Usage example: "!userlevel suscriber".',
+                'code' => 'userlevel $(querystring)',
+                'mod' => true
             ]
         ];
     }

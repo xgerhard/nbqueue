@@ -39,7 +39,7 @@ class QueueHandler
             ['queue_id', '=', $this->c->active]
         ])->count();
 
-        $strRes = 'Current queue: \''. $this->q->name .'\', the queue is currently '. ($this->q->is_open == 1 ? 'open' : 'closed') .' and contains '. $iCount .' user'. ($iCount == 1 ? '' : 's');
+        $strRes = 'Current queue: "'. $this->q->name .'", the queue is currently '. ($this->q->is_open == 1 ? 'open for "'. $this->getUserLevel($this->q->user_level) .'"' : 'closed') .' and contains '. $iCount .' user'. ($iCount == 1 ? '' : 's');
 
         // List available queues
         $aQueues = Queue::where([
@@ -237,8 +237,9 @@ class QueueHandler
     */
     public function joinQueue($strMessage)
     {
-        if(!$this->q->is_open) return 'The queue'. $this->q->displayName .' is currently closed';
+        if(!$this->q->is_open) return $this->returnText('The queue'. $this->q->displayName .' is currently closed');
         if(!$this->u) throw new Exception(self::ERR_NO_USER);
+        if(!$this->isAllowed($this->getUserLevel($this->q->user_level))) return $this->returnText('The queue'. $this->q->displayName .' is currently only open for "'. $this->getUserLevel($this->q->user_level) .'s"');
         if(strlen($strMessage) > 50) return $this->returnText('Error: Max length of user message is 50');
 
         $oQueueUser = QueueUser::where([
@@ -374,7 +375,7 @@ class QueueHandler
             }
         }
 
-        $oUser->isModerator = ($aUser['userLevel'] == 'owner' || $aUser['userLevel'] == 'moderator');
+        $oUser->userLevel = $aUser['userLevel'];
         $this->u = $oUser;
     }
 
@@ -385,7 +386,7 @@ class QueueHandler
     */
     public function addQueue($strName, $iOpen = 0, $bText = false)
     {
-        if($bText && !$this->u->isModerator) return $this->returnText(self::ERR_NO_MOD);
+        if($bText && !$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
         if(trim($strName) == "") return $this->returnText('No queue name specified to add');
 
         $oQueue = Queue::where([
@@ -421,7 +422,7 @@ class QueueHandler
     */
     public function deleteQueue($strName)
     {
-        if(!$this->u->isModerator) return $this->returnText(self::ERR_NO_MOD);
+        if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
         if(trim($strName) == "") return $this->returnText('No queue name specified to delete');
         if(strtolower(trim($strName)) == 'default') return $this->returnText('Cannot delete the \'default\' queue');
 
@@ -464,7 +465,7 @@ class QueueHandler
     */
     public function setQueue($strName)
     {
-        if(!$this->u->isModerator) return $this->returnText(self::ERR_NO_MOD);
+        if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
         if(trim($strName) == "") return $this->returnText('No queue name specified to set active');
 
         $oQueue = Queue::where([
@@ -515,6 +516,91 @@ class QueueHandler
         $strReturnMessage = "";
         if($this->u) $strReturnMessage .= '@'. $this->u->displayName .': ';
         return substr($strReturnMessage . $strMessage .'.', 0, 200);
+    }
+
+    /**
+     * Sets the userLevel of the currenct queue
+     *
+     * @return string
+    */
+    public function setUserLevel($strUserLevel)
+    {
+        if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
+        $strUserLevel = trim(strtolower($strUserLevel));
+        if($iUserLevel = $this->getUserLevel($strUserLevel, true))
+        {
+            if($this->q->user_level != $iUserLevel)
+            {
+                $this->q->user_level = $iUserLevel;
+                $this->q->save();
+                return $this->returnText('Succesfully set the UserLevel to "'. $strUserLevel .'"');
+            }
+            else return $this->returnText('The current queue is already set to UserLevel "'. $strUserLevel .'"');
+        }
+        else return $this->returnText('Invalid UserLevel. Available UserLevels: moderator, regular, subscriber, vip, everyone');
+    }
+
+    /**
+     * Checks if the user is allowed to perform a certain action
+     *
+     * @return boolean
+    */
+    private function isAllowed($strUserLevel)
+    {
+        if($this->u)
+        {
+            $aAllowed = ['owner'];
+            switch($strUserLevel)
+            {
+                case 'everyone':
+                    return true;
+                break;
+     
+                case 'moderator':
+                    $aAllowed = ['owner', 'moderator'];
+                break;
+
+                case 'regular':
+                    $aAllowed = ['owner', 'moderator', 'regular'];
+                break;
+
+                case 'subscriber':
+                    $aAllowed = ['owner', 'moderator', 'regular', 'subscriber'];
+                break;
+
+                case 'vip':
+                    $aAllowed = ['owner', 'moderator', 'regular', 'subscriber', 'vip'];
+                break;
+            }
+            return in_array($this->u->userLevel, $aAllowed);
+        }
+        return false;
+    }
+
+    /**
+     * Matches the int userLevel to string userLevel or vice versa
+     * returns false if invalid userLevel
+     *
+     * @return int / string
+    */
+    private function getUserLevel($xUserLevel, $bReverse = false)
+    {
+        $aUserLevels = [
+            6 => 'owner',
+            5 => 'moderator',
+            4 => 'regular',
+            3 => 'subscriber',
+            2 => 'vip',
+            1 => 'everyone'
+        ];
+
+        if($bReverse)
+            return array_search($xUserLevel, $aUserLevels);
+
+        elseif(isset($aUserLevels[$xUserLevel]))
+            return $aUserLevels[$xUserLevel];
+
+        return false;
     }
 }
 ?>

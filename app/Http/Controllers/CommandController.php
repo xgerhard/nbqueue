@@ -78,6 +78,11 @@ class CommandController extends BaseController
                             return $oQH->setQueue($strMessage);
                         break;
 
+                        case 'userlevel':
+                        case 'ul':
+                            return $oQH->setUserLevel($strMessage);
+                        break;
+
                         case 'remove':
                             return $oQH->removeQueueUser($strMessage);
                         break;
@@ -118,7 +123,9 @@ class CommandController extends BaseController
             'next',
             'clear',
             'info',
-            'remove'
+            'remove',
+            'userlevel',
+            'ul'
         );
         if(in_array($strAction, $aActions)) return $strAction;
         return false;
