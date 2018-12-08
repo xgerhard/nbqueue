@@ -201,7 +201,7 @@ class InstallController extends BaseController
             ],
             'userlevel' => [
                 'name' => '!userlevel',
-                'description' => 'Sets the UserLevel of the current current. Available userlevels: moderator, regular, subscriber, vip, everyone. Usage example: "!userlevel suscriber".',
+                'description' => 'Sets the UserLevel of the current active queue. Available userlevels: moderator, vip, regular, subscriber, everyone. Usage example: "!userlevel suscriber".',
                 'code' => 'userlevel $(querystring)',
                 'mod' => true
             ]
