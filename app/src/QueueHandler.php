@@ -560,16 +560,16 @@ class QueueHandler
                     $aAllowed = ['owner', 'moderator'];
                 break;
 
+                case 'vip':
+                    $aAllowed = ['owner', 'moderator', 'vip'];
+                break;
+
                 case 'regular':
-                    $aAllowed = ['owner', 'moderator', 'regular'];
+                    $aAllowed = ['owner', 'moderator', 'vip', 'regular'];
                 break;
 
                 case 'subscriber':
-                    $aAllowed = ['owner', 'moderator', 'regular', 'subscriber'];
-                break;
-
-                case 'vip':
-                    $aAllowed = ['owner', 'moderator', 'regular', 'subscriber', 'vip'];
+                    $aAllowed = ['owner', 'moderator', 'vip', 'regular', 'subscriber'];
                 break;
             }
             return in_array($this->u->userLevel, $aAllowed);
