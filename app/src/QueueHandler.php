@@ -75,7 +75,7 @@ class QueueHandler
     */
     public function clearQueue($iQueueId = false)
     {
-        if(!$this->u->isModerator) return $this->returnText(self::ERR_NO_MOD);
+        if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
 
         DB::table('queue_users')->where('queue_id', '=', ($iQueueId === false ? $this->c->active : $iQueueId))->delete();
         return $this->returnText('Succesfully cleared the queue'. $this->q->displayName);
@@ -117,7 +117,7 @@ class QueueHandler
     */
     public function getNext($iLimit = 1)
     {
-        if(!$this->u->isModerator) return $this->returnText(self::ERR_NO_MOD);
+        if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
 
         $iChars = 0;
         $iCharLimit = 150;
@@ -160,7 +160,7 @@ class QueueHandler
     */
     public function openQueue()
     {
-        if(!$this->u->isModerator) return $this->returnText(self::ERR_NO_MOD);
+        if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
 
         if($this->q->is_open == 0)
         {
@@ -178,7 +178,7 @@ class QueueHandler
     */
     public function closeQueue()
     {
-        if(!$this->u->isModerator) return $this->returnText(self::ERR_NO_MOD);
+        if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
 
         if($this->q->is_open == 1)
         {
