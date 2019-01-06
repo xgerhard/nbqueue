@@ -47,7 +47,7 @@ $router->get('list/{id}/{name}', function ($id, $name)
                 }
             }
         }
-        return view('list', ['queues' => $aQueues, 'channel' => $oChannel, 'name' => $name]);
+        return view('list', ['queues' => $aQueues, 'channel' => $oChannel, 'name' => urldecode($name)]);
     }
 });
 
