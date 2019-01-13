@@ -561,15 +561,15 @@ class QueueHandler
                 break;
 
                 case 'vip':
-                    $aAllowed = ['owner', 'moderator', 'vip'];
+                    $aAllowed = ['owner', 'moderator', 'twitch_vip'];
                 break;
 
                 case 'regular':
-                    $aAllowed = ['owner', 'moderator', 'vip', 'regular'];
+                    $aAllowed = ['owner', 'moderator', 'twitch_vip', 'regular'];
                 break;
 
                 case 'subscriber':
-                    $aAllowed = ['owner', 'moderator', 'vip', 'regular', 'subscriber'];
+                    $aAllowed = ['owner', 'moderator', 'twitch_vip', 'regular', 'subscriber'];
                 break;
             }
             return in_array($this->u->userLevel, $aAllowed);
