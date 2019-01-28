@@ -30,3 +30,17 @@ Sign in with Nightbot here, the installer will add the selected commands to Nigh
 * The queue system currently identifies users by their Id's provided in the Nightbot headers, this means that the only way to join a queue is by typing the join command, a moderator can't add users, which might be a good thing?
 * Nightbot has a minimum of 5 sec cooldown on commands, if a big chat will spam !join - some messages will be ignored, the only way a user knows if he/she joined succesfull is if they get a response from Nightbot with a success message. This might be spammy if alot of users want to enter, however if I dont send the confirmation people wouldn't know if they entered.
 * People will be able to join a queue through Discord and Twitch at the same time, maybe add a setting to set a main platform and ignore all others? 
+
+
+## Development
+1. Get the repository: `git clone https://github.com/xgerhard/nbqueue`
+2. From the nbqueue folder run `composer install`
+3. Rename `.env.example` to `.env` and set your database details
+4. Run `php artisan migrate` to install the required tables
+5. Normally the app only accepts requests made by Nightbot. If your `APP_DEBUG` value is set to `true` in your `.env` file the app will manually add the Nightbot headers, you can set the virtual user and channel [here](app/Http/Controllers/CommandController.php)
+6. Start a local webserver: `php -S localhost:8080`
+
+Now you'll be able to run chat commands directly through the browser by setting the `q` parameter in the url, for example:
+- `http://localhost:8080/public/?q=join%20test%20message` will run `!q join test message`
+- `http://localhost:8080/public/?q=next%202` will run `!q next 2`
+- `http://localhost:8080/public/?q=list` will run `!q list`

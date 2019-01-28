@@ -17,7 +17,26 @@ class CommandController extends BaseController
             {
                 array_shift($aQuery);
                 $strMessage = empty($aQuery) ? "" : implode(" ", $aQuery);
-                
+
+                // If APP_DEBUG is set to true in your .env, you can set a test user & channel here, so the script works from the browser.
+                // This will manually set the request headers that are normally send by Nightbot urlFetch: https://docs.nightbot.tv/commands/variables/urlfetch
+                if(env('APP_DEBUG'))
+                {
+                    $request->headers->set('Nightbot-User', http_build_query([
+                        'name' => 'xgerhard',
+                        'displayName' => 'xgerhard',
+                        'provider' => 'twitch',
+                        'providerId' => '12345678',
+                        'userLevel' => 'owner'
+                    ]));
+                    $request->headers->set('Nightbot-Channel', http_build_query([
+                        'name' => 'xgerhard',
+                        'displayName' => 'xgerhard',
+                        'provider' => 'twitch',
+                        'providerId' => '12345678'
+                    ]));
+                }
+
                 $oNightbot = new Nightbot($request);
                 if(!$oNightbot->isNightbotRequest())
                 {
@@ -96,7 +115,6 @@ class CommandController extends BaseController
                         break;
                     }
                 }
-                //catch(\Exception $e)
                 catch(Exception $e)
                 {
                     dd($e);
