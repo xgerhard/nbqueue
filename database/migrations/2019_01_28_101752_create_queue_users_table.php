@@ -14,14 +14,12 @@ class CreateQueueUsersTable extends Migration
     public function up()
     {
         Schema::create('queue_users', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->increments('id');
             $table->timestamps();
             $table->integer('queue_id')->length(10)->unsigned();
             $table->integer('user_id')->length(10)->unsigned();
             $table->string('message', 150)->collation('utf8mb4_general_ci');
-
-            $table->foreign('queue_id')->references('id')->on('queues');
-            $table->foreign('user_id')->references('id')->on('users');
         });
     }
 

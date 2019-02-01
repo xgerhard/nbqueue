@@ -14,21 +14,19 @@ class CreateChannelsTable extends Migration
     public function up()
     {
         Schema::create('channels', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->increments('id');
             $table->timestamps();
             $table->string('provider', 100);
             $table->string('provider_id', 100); 
-            $table->integer('active')->length(10)->unsigned();
-
-            $table->foreign('active')->references('id')->on('queues');
+            $table->integer('active')->length(10)->unsigned()->default(1);
         });
 
         DB::table('channels')->insert(
             array(
-                'id' => 0,
                 'provider' => 'twitch',
                 'provider_id' => 'twitch_0',
-                'active' => 0
+                'active' => 1
             )
         );
     }
