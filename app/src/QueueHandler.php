@@ -231,6 +231,46 @@ class QueueHandler
     }
 
     /**
+     * Priovide adding user by moderator
+     *
+     * @return string
+     */
+    public function addUser($strMessage)
+    {
+        if(!$this->q->is_open) return $this->returnText('The queue'. $this->q->displayName .' is currently closed');
+        if(!$this->u) throw new Exception(self::ERR_NO_USER);
+        if(!$this->isAllowed($this->getUserLevel($this->q->user_level))) return $this->returnText('The queue'. $this->q->displayName .' is currently only open for "'. $this->getUserLevel($this->q->user_level) .'s"');
+        if(strlen($strMessage) > 50) return $this->returnText('Error: Max length of user message is 50');
+
+        $oQueueUser = QueueUser::where([
+            ['user_id', '=', $this->u->id],
+            ['queue_id', '=', $this->c->active]
+        ])->first();
+
+        if($oQueueUser)
+        {
+            if($oQueueUser->message != $strMessage)
+            {
+                $oQueueUser->message = $strMessage;
+                $oQueueUser->save();
+                return $this->returnText('You are already in queue'. $this->q->displayName .' (position #'. $this->getPosition(false) .'), your queue message has been updated');
+            }
+            else return $this->returnText('You are already in queue'. $this->q->displayName .' (position #'. $this->getPosition(false) .')');
+        }
+        else
+        {
+            $this->q->displayName = $strMessage;
+            $oQueueUser = QueueUser::create([
+                'user_id' => $this->u->id,
+                'queue_id' => $this->c->active,
+                'message' => $strMessage
+            ]);
+
+            if($oQueueUser) return $this->returnText('Succesfully added to queue'. $this->q->displayName . ', position is #'. $this->getPosition(false));
+        }
+    }
+
+    /**
      * Adds the current user to the current active queue
      *
      * @return string
@@ -374,6 +414,7 @@ class QueueHandler
                 $oUser->save();
             }
         }
+
 
         $oUser->userLevel = $aUser['userLevel'];
         $this->u = $oUser;

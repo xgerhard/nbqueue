@@ -13,6 +13,8 @@ class CommandController extends BaseController
         if($request->has('q'))
         {
             $aQuery = explode(" ", trim($request->input('q')));
+
+
             if(!empty($aQuery) && $strAction = $this->getAction($aQuery[0]))
             {
                 array_shift($aQuery);
@@ -46,9 +48,19 @@ class CommandController extends BaseController
                 try{
                     $oQH = new QueueHandler($oNightbot->getChannel());
                     if($oNightbot->getUser()) $oQH->setUser($oNightbot->getUser());
-
                     switch($strAction)
                     {
+                        case 'adduser':
+                            $oQH->setUser([
+                                'name' => $strMessage,
+                                'displayName' => $strMessage,
+                                'provider' => 'twitch',
+                                'providerId' => uniqid(),
+                                'userLevel' => 'user'
+                            ]);
+                            return $oQH->addUser($strMessage);
+                        break;
+
                         case 'join':
                             return $oQH->joinQueue($strMessage);
                         break;
@@ -129,6 +141,7 @@ class CommandController extends BaseController
     {
         $strAction = strtolower(trim($strAction));
         $aActions = array(
+            'adduser',
             'add',
             'set',
             'del',
