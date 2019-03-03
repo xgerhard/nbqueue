@@ -129,7 +129,7 @@ class InstallController extends BaseController
             'join' => [
                 'name' => '!join',
                 'description' => 'Join the current queue. Optional message. Usage: "!join" or "!join message".',
-                'code' => 'join $(querystring)'
+                'code' => 'join $(query)'
             ],
             'leave' => [
                 'name' => '!leave',
@@ -166,7 +166,7 @@ class InstallController extends BaseController
             'next' => [
                 'name' => '!next',
                 'description' => 'Picks the next user. Optional number for multiple users. Usage: "!next" or "!next 3".',
-                'code' => 'next $(querystring)',
+                'code' => 'next $(query)',
                 'mod' => true
             ],
             'clear' => [
@@ -178,31 +178,31 @@ class InstallController extends BaseController
             'add' => [
                 'name' => '!add',
                 'description' => 'Adds a subqueue. Required message. Usage example: "!add Fortnite".',
-                'code' => 'add $(querystring)',
+                'code' => 'add $(query)',
                 'mod' => true
             ],
             'del' => [
                 'name' => '!del',
                 'description' => 'Deletes a subqueue. Required message. Usage example: "!del Fortnite".',
-                'code' => 'del $(querystring)',
+                'code' => 'del $(query)',
                 'mod' => true
             ],
             'set' => [
                 'name' => '!set',
                 'description' => 'Sets a subqueue as active queue. Required message. Usage example: "!set Fortnite".',
-                'code' => 'set $(querystring)',
+                'code' => 'set $(query)',
                 'mod' => true
             ],
             'remove' => [
                 'name' => '!remove',
                 'description' => 'Deletes user from queue by ID, this ID can be found when opening the full list in browser (list command). Usage example: "!remove 1".',
-                'code' => 'remove $(querystring)',
+                'code' => 'remove $(query)',
                 'mod' => true
             ],
             'userlevel' => [
                 'name' => '!userlevel',
                 'description' => 'Sets the UserLevel of the current active queue. Available userlevels: moderator, vip, regular, subscriber, everyone. Usage example: "!userlevel suscriber".',
-                'code' => 'userlevel $(querystring)',
+                'code' => 'userlevel $(query)',
                 'mod' => true
             ]
         ];
