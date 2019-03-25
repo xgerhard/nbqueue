@@ -81,6 +81,10 @@ class CommandController extends BaseController
                             return $oQH->getNext((int) $strMessage);
                         break;
 
+                        case 'who':
+                            return $oQH->getListQueue((int) $strMessage);
+                        break;
+
                         case 'clear':
                             return $oQH->clearQueue();
                         break;
@@ -143,7 +147,8 @@ class CommandController extends BaseController
             'info',
             'remove',
             'userlevel',
-            'ul'
+            'ul',
+            'who'
         );
         if(in_array($strAction, $aActions)) return $strAction;
         return false;

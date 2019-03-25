@@ -88,6 +88,8 @@ class QueueHandler
     */
     public function getListQueue($iLimit = 5)
     {
+        if($iLimit == 0) $iLimit = 5;
+
         $aQueueUsers = QueueUser::where([
             ['queue_id', '=', $this->c->active]
         ])
