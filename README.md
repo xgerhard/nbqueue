@@ -10,6 +10,7 @@ The command supports multiple queues, but there can only be one active. Only the
 * __position__ - Displays the position from the user in the current active queue
 * __list__ - Displays a link to a webpage with the full list of users in the queue
 * __info__ - Displays the current queue information, if the queue is open and how many people are in it
+* __who $x__ - Displays the next $x people that are in the queue
 
 # Moderator commands
 * __open__ - Opens the current queue
@@ -20,6 +21,7 @@ The command supports multiple queues, but there can only be one active. Only the
 * __del $name__ - Deletes the queue with name $name (the default queue can't be deleted)
 * __set $name__ - Will set the queue with name $name as active queue.
 * __remove $id__ - Will remove the user with id $id from the queue
+* __ul $userlevel__ - Will set the required userlevel for the active queue (available userlevels: everyone, subscriber, regular, twitch_vip, moderator, owner)
 
 # Installation
 Sign in with Nightbot here, the installer will add the selected commands to Nightbot: https://2g.be/twitch/nbqueue/public/install/auto
