@@ -94,7 +94,7 @@ class QueueHandler
             ['queue_id', '=', $this->c->active]
         ])
         ->orderBy('created_at', 'asc')
-        ->limit($iLimit === false ? 1000 : (int) $iLimit)
+        ->limit($iLimit === false ? 50 : (int) $iLimit)
         ->get();
 
         if(!$aQueueUsers || $aQueueUsers->isEmpty())
@@ -117,7 +117,7 @@ class QueueHandler
      *
      * @return string
     */
-    public function getNext($iLimit = 1)
+    public function getNext($iLimit = 1, $bRandom = false)
     {
         if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
 
@@ -130,7 +130,7 @@ class QueueHandler
         $aQueueUsers = QueueUser::where([
             ['queue_id', '=', $this->c->active]
         ])
-        ->orderBy('created_at', 'asc')
+        ->orderByRaw($bRandom === false ? 'created_at' : 'RAND()', 'asc')
         ->limit($iLimit)
         ->get();
 

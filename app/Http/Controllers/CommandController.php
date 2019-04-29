@@ -78,7 +78,11 @@ class CommandController extends BaseController
                         break;
 
                         case 'next':
-                            return $oQH->getNext((int) $strMessage);
+                            return $oQH->getNext((int) $strMessage, false);
+                        break;
+
+                        case 'random':
+                            return $oQH->getNext((int) $strMessage, true);
                         break;
 
                         case 'who':
@@ -148,7 +152,8 @@ class CommandController extends BaseController
             'remove',
             'userlevel',
             'ul',
-            'who'
+            'who',
+            'random'
         );
         if(in_array($strAction, $aActions)) return $strAction;
         return false;
