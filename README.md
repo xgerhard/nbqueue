@@ -20,10 +20,10 @@ The command supports multiple queues, but there can only be one active. Only the
 * __clear__ - Clears the current queue
 * __add $name__ - Creates a new queue with the name $name
 * __del $name__ - Deletes the queue with name $name (the default queue can't be deleted)
-* __set $name__ - Will set the queue with name $name as active queue.
+* __set $name__ - Will set the queue with name $name as active queue
 * __remove $id__ - Will remove the user with id $id from the queue
 * __ul $userlevel__ - Will set the required userlevel for the active queue (available userlevels: everyone, subscriber, regular, twitch_vip, moderator, owner)
-* __promote $id__ - Will remove the user with id $id to first position of the queue (next person).
+* __promote $id__ - Will promote the user with id $id to first position of the queue (next person)
 
 Note: Use the 'list' command to find the $id of the user to remove / promote: https://imgur.com/a/1k7F4lb
 
