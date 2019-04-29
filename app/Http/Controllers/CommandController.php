@@ -114,6 +114,10 @@ class CommandController extends BaseController
                             return $oQH->removeQueueUser($strMessage);
                         break;
 
+                        case 'promote':
+                            return $oQH->promoteUser((int) $strMessage);
+                        break;
+
                         case 'help':
                             return 'Please see www.url.com for more info on usage';
                         break;
@@ -153,7 +157,8 @@ class CommandController extends BaseController
             'userlevel',
             'ul',
             'who',
-            'random'
+            'random',
+            'promote'
         );
         if(in_array($strAction, $aActions)) return $strAction;
         return false;

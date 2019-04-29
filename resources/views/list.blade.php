@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <title>{{$name}} - NBQ</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
@@ -22,7 +23,7 @@
                 <ul class="list-group">
                     @if(isset($queue->users) && !empty($queue->users))
                     @foreach($queue->users as $i => $user)
-                    <li class="list-group-item">{{$i+1}}. {{$user->user->displayName}}<span class="badge badge-primary badge-pill">Remove ID: {{$user->id}}</span></li>
+                    <li class="list-group-item">{{$i+1}}. {{$user->user->displayName}}<span class="badge badge-primary badge-pill">Remove / Promote ID: {{$user->id}}</span></li>
                     @endforeach
                     @else
                     <li class="list-group-item">Queue is empty</li>

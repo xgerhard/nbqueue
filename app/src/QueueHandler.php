@@ -78,7 +78,7 @@ class QueueHandler
         if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
 
         DB::table('queue_users')->where('queue_id', '=', ($iQueueId === false ? $this->c->active : $iQueueId))->delete();
-        return $this->returnText('Succesfully cleared the queue'. $this->q->displayName);
+        return $this->returnText('Successfully cleared the queue'. $this->q->displayName);
     }
 
     /**
@@ -267,7 +267,7 @@ class QueueHandler
                 'message' => $strMessage
             ]);
 
-            if($oQueueUser) return $this->returnText('Succesfully added to queue'. $this->q->displayName . ', your position is #'. $this->getPosition(false));
+            if($oQueueUser) return $this->returnText('Successfully added to queue'. $this->q->displayName . ', your position is #'. $this->getPosition(false));
         }
     }
 
@@ -288,12 +288,46 @@ class QueueHandler
         if($oQueueUser)
         {
             $oQueueUser->forceDelete();
-            return $this->returnText('Succesfully removed from queue'. $this->q->displayName);
+            return $this->returnText('Successfully removed from queue'. $this->q->displayName);
         }
         else
         {
             return $this->returnText('Unable to leave, you are not in queue'. $this->q->displayName);
         }
+    }
+
+    /**
+     * Promotes a user to the first position of the current queue
+     *
+     * @return string
+    */
+    public function promoteUser($id = 0)
+    {
+        if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
+
+        $id = (int) $id;
+        $oQueueUser = QueueUser::find($id);
+        if($oQueueUser)
+        {
+            if($oQueueUser->queue->channel_id == $this->c->id)
+            {
+                $oNextQueueUser = QueueUser::where([
+                    ['queue_id', '=', $this->c->active]
+                ])
+                ->orderBy('created_at', 'asc')
+                ->first();
+
+                if($oNextQueueUser && $oNextQueueUser->id != $oQueueUser->id)
+                {
+                    $oQueueUser->created_at = strtotime($oNextQueueUser->created_at)-1;
+                    $oQueueUser->save();
+                    return $this->returnText('Successfully promoted '. $oQueueUser->user->displayName .' to first position of the queue');
+                }
+                else return $this->returnText('Unable to promote user in queue, user already first position in queue'); 
+            }
+            else return $this->returnText('Unable to promote user in queue, queue doesn\'t belong to this channel');
+        }
+        else return $this->returnText('Unable to promote user in queue, user not found');
     }
 
     /**
@@ -413,7 +447,7 @@ class QueueHandler
         }
         elseif($oQueue)
         {
-            return $this->returnText('Succesfully added queue "'. $strName .'"');
+            return $this->returnText('Successfully added queue "'. $strName .'"');
         }
     }
 
@@ -452,7 +486,7 @@ class QueueHandler
 
             $this->clearQueue($oQueue->id);
             $oQueue->forceDelete();
-            return $this->returnText('Succesfully deleted queue "'. $strName.'"');
+            return $this->returnText('Successfully deleted queue "'. $strName.'"');
         }
         else
         {
@@ -501,7 +535,7 @@ class QueueHandler
             if($oQueueUser->queue->channel_id == $this->c->id)
             {
                 $oQueueUser->forceDelete();
-                return $this->returnText('Succesfully removed user from queue');
+                return $this->returnText('Successfully removed user from queue');
             }
             else return $this->returnText('Unable to remove from queue, queue doesn\'t belong to this channel');
         }
@@ -535,7 +569,7 @@ class QueueHandler
             {
                 $this->q->user_level = $iUserLevel;
                 $this->q->save();
-                return $this->returnText('Succesfully set the UserLevel to "'. $strUserLevel .'"');
+                return $this->returnText('Successfully set the UserLevel to "'. $strUserLevel .'"');
             }
             else return $this->returnText('The current queue is already set to UserLevel "'. $strUserLevel .'"');
         }
