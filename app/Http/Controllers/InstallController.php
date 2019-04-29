@@ -169,6 +169,12 @@ class InstallController extends BaseController
                 'code' => 'next $(query)',
                 'mod' => true
             ],
+            'random' => [
+                'name' => '!random',
+                'description' => 'Picks a random user. Optional number for multiple users. Usage: "!random" or "!random 3".',
+                'code' => 'random $(query)',
+                'mod' => true
+            ],
             'clear' => [
                 'name' => '!clear',
                 'description' => 'Clears the current queue. Usage: "!clear".',
