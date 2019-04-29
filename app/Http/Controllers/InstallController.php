@@ -210,6 +210,12 @@ class InstallController extends BaseController
                 'description' => 'Sets the UserLevel of the current active queue. Available userlevels: moderator, vip, regular, subscriber, everyone. Usage example: "!userlevel suscriber".',
                 'code' => 'userlevel $(query)',
                 'mod' => true
+            ],
+            'promote' => [
+                'name' => '!promote',
+                'description' => 'Promotes user to first position of queue by ID, this ID can be found when opening the full list in browser (list command). Usage example: "!promote 1".',
+                'code' => 'promote $(query)',
+                'mod' => true
             ]
         ];
     }
