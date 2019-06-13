@@ -118,6 +118,10 @@ class CommandController extends BaseController
                             return $oQH->promoteUser((int) $strMessage);
                         break;
 
+                        case 'setlimit':
+                            return $oQH->setQueueLimit($strMessage);
+                        break;
+
                         case 'help':
                             return 'Please see www.url.com for more info on usage';
                         break;
@@ -158,7 +162,8 @@ class CommandController extends BaseController
             'ul',
             'who',
             'random',
-            'promote'
+            'promote',
+            'setlimit'
         );
         if(in_array($strAction, $aActions)) return $strAction;
         return false;

@@ -24,6 +24,7 @@ The command supports multiple queues, but there can only be one active. Only the
 * __remove $id__ - Will remove the user with id $id from the queue
 * __ul $userlevel__ - Will set the required userlevel for the active queue (available userlevels: everyone, subscriber, regular, twitch_vip, moderator, owner)
 * __promote $id__ - Will promote the user with id $id to first position of the queue (next person)
+* __setlimit $number__ - Will set a limit of users that can join the current active queue
 
 Note: Use the 'list' command to find the $id of the user to remove / promote: https://imgur.com/a/1k7F4lb
 

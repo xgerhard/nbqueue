@@ -261,6 +261,15 @@ class QueueHandler
         }
         else
         {
+            if($this->q->max_users != 0)
+            {
+                $iQueryUsers = QueueUser::where([
+                    ['queue_id', '=', $this->c->active]
+                ])->count();
+
+                if($iQueryUsers >= $this->q->max_users) return $this->returnText('The queue'. $this->q->displayName .' is currently full, limit: '. $this->q->max_users);
+            }
+
             $oQueueUser = QueueUser::create([
                 'user_id' => $this->u->id,
                 'queue_id' => $this->c->active,
@@ -540,6 +549,27 @@ class QueueHandler
             else return $this->returnText('Unable to remove from queue, queue doesn\'t belong to this channel');
         }
         else return $this->returnText('Unable to remove from queue, user not found');
+    }
+
+    /**
+     * Set limit of the current queue
+     *
+     * @return string
+    */
+    public function setQueueLimit($strLimit)
+    {
+        if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
+        if(trim($strLimit) == '') return $this->returnText('No queue limit provided');
+
+        $iLimit = (int) $strLimit;
+        if($iLimit > 9999)
+            return $this->returnText('Invalid queue limit provided, number must be less than 9999');
+        else
+        {
+            $this->q->max_users = $iLimit;
+            $this->q->save();
+            return $this->returnText('Successfully set the queue limit to: '. ($iLimit == 0 ? 'unlimited (0)' : $iLimit));
+        }
     }
 
     /**

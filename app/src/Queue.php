@@ -16,7 +16,8 @@ class Queue extends Model
         'name',
         'is_open',
         'channel_id',
-        'user_level'
+        'user_level',
+        'max_users'
     ];    
 }
 ?>

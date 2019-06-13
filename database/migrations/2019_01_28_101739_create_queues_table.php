@@ -21,6 +21,7 @@ class CreateQueuesTable extends Migration
             $table->tinyInteger('is_open')->length(2)->nullable()->default(0);
             $table->integer('channel_id')->length(10)->unsigned();
             $table->tinyInteger('user_level')->length(2)->default(1);
+            $table->integer('max_users')->length(4)->default(0);
         });
 
         DB::table('queues')->insert(
