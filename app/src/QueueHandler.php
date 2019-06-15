@@ -561,7 +561,7 @@ class QueueHandler
         if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
         if(trim($strLimit) == '') return $this->returnText('No queue limit provided');
 
-        $iLimit = (int) $strLimit;
+        $iLimit = abs($strLimit);
         if($iLimit > 9999)
             return $this->returnText('Invalid queue limit provided, number must be less than 9999');
         else

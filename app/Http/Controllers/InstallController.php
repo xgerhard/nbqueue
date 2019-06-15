@@ -151,6 +151,11 @@ class InstallController extends BaseController
                 'description' => 'Returns information (name, amount of users, status) of the current queue. Usage: "!info".',
                 'code' => 'info'
             ],
+            'who' => [
+                'name' => '!who',
+                'description' => 'Displays the next $x people that are in the queue. Usage "!who 5".',
+                'code' => 'who $(query)'
+            ],
             'open' => [
                 'name' => '!open',
                 'description' => 'Opens the current queue. Usage: "!open".',
