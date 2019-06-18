@@ -242,7 +242,7 @@ class QueueHandler
         if(!$this->q->is_open) return $this->returnText('The queue'. $this->q->displayName .' is currently closed');
         if(!$this->u) throw new Exception(self::ERR_NO_USER);
         if(!$this->isAllowed($this->getUserLevel($this->q->user_level))) return $this->returnText('The queue'. $this->q->displayName .' is currently only open for "'. $this->getUserLevel($this->q->user_level) .'s"');
-        if(strlen($strMessage) > 50) return $this->returnText('Error: Max length of user message is 50');
+        if(strlen($strMessage) > 100) return $this->returnText('Error: Max length of user message is 100');
 
         $oQueueUser = QueueUser::where([
             ['user_id', '=', $this->u->id],
