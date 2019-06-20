@@ -117,18 +117,31 @@ class QueueHandler
      *
      * @return string
     */
-    public function getNext($iLimit = 1, $bRandom = false)
+    public function getNext($strMessage, $bRandom = false)
     {
         if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
 
         $iChars = 0;
         $iCharLimit = 150;
+        $iLimit = 1;
+        $iUserLevel = 1;
+        $aMessage = array_values(array_filter(explode(' ', $strMessage)));
+
+        if(isset($aMessage[0])) $iLimit = $aMessage[0];
+        if(isset($aMessage[1]))
+        {
+            if(substr($aMessage[1], -1) == 's') $aMessage[1] = substr($aMessage[1], 0, -1);
+            $iUserLevel = $this->getUserLevel($aMessage[1], true);
+            if(!$iUserLevel) return $this->returnText('Invalid UserLevel provided: "'. $aMessage[1] .'". Available UserLevels: moderator, regular, subscriber, vip, everyone');
+        }
+
         $iLimit = (int) $iLimit;
         if($iLimit == 0) $iLimit = 1;
-        if($iLimit > 10) $iLimit = 10; // Max
+        if($iLimit > 10) $iLimit = 10;
 
         $aQueueUsers = QueueUser::where([
-            ['queue_id', '=', $this->c->active]
+            ['queue_id', '=', $this->c->active],
+            ['user_level', '=', $iUserLevel]
         ])
         ->orderByRaw($bRandom === false ? 'created_at' : 'RAND()', 'asc')
         ->limit($iLimit)
@@ -273,7 +286,8 @@ class QueueHandler
             $oQueueUser = QueueUser::create([
                 'user_id' => $this->u->id,
                 'queue_id' => $this->c->active,
-                'message' => $strMessage
+                'message' => $strMessage,
+                'user_level' => $this->getUserLevel($this->u->userLevel, true)
             ]);
 
             if($oQueueUser) return $this->returnText('Successfully added to queue'. $this->q->displayName . ', your position is #'. $this->getPosition(false));
@@ -651,6 +665,9 @@ class QueueHandler
     */
     private function getUserLevel($xUserLevel, $bReverse = false)
     {
+        if($xUserLevel == 'twitch_vip')
+            $xUserLevel = 'vip';
+
         $aUserLevels = [
             6 => 'owner',
             5 => 'moderator',

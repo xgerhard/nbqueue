@@ -78,11 +78,11 @@ class CommandController extends BaseController
                         break;
 
                         case 'next':
-                            return $oQH->getNext((int) $strMessage, false);
+                            return $oQH->getNext($strMessage, false);
                         break;
 
                         case 'random':
-                            return $oQH->getNext((int) $strMessage, true);
+                            return $oQH->getNext($strMessage, true);
                         break;
 
                         case 'who':

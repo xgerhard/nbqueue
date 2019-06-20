@@ -13,7 +13,8 @@ class QueueUser extends Model
     protected $fillable = [
         'queue_id',
         'user_id',
-        'message'
+        'message',
+        'user_level'
     ];
 
     public function user()

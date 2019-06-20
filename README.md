@@ -15,8 +15,8 @@ The command supports multiple queues, but there can only be one active. Only the
 # Moderator commands
 * __open__ - Opens the current queue
 * __close__ - Closes the current queue
-* __next $x__ - Picks and removes the first $x users from the queue, the $x is optional
-* __random $x__ - Picks and removes $x random users from the queue, the $x is optional
+* __next $number $userlevel__ - Picks and removes the first $number users from the queue, with userlevel $userlevel. The $number is optional (default 1), the $userlevel is optional (default everyone)
+* __random $number $userlevel__ - Picks and removes $number random users from the queue, with userlevel $userlevel. The $number is optional (default 1), the $userlevel is optional (default everyone)
 * __clear__ - Clears the current queue
 * __add $name__ - Creates a new queue with the name $name
 * __del $name__ - Deletes the queue with name $name (the default queue can't be deleted)

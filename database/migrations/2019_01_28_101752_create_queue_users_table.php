@@ -20,6 +20,7 @@ class CreateQueueUsersTable extends Migration
             $table->integer('queue_id')->length(10)->unsigned();
             $table->integer('user_id')->length(10)->unsigned();
             $table->string('message', 150)->collation('utf8mb4_general_ci');
+            $table->tinyInteger('user_level')->length(2)->default(1);
         });
     }
 
