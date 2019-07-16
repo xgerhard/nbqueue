@@ -141,7 +141,7 @@ class QueueHandler
 
         $aQueueUsers = QueueUser::where([
             ['queue_id', '=', $this->c->active],
-            ['user_level', '=', $iUserLevel]
+            ['user_level', '>=', $iUserLevel]
         ])
         ->orderByRaw($bRandom === false ? 'created_at' : 'RAND()', 'asc')
         ->limit($iLimit)
@@ -240,7 +240,7 @@ class QueueHandler
 
         if(isset($qPosition[0]))
         {
-            return $bFull === true ? $this->returnText('Your current position in the queue'. $this->q->displayName .' is: '. $qPosition[0]->position) : $qPosition[0]->position;
+            return $bFull === true ? $this->returnText('Your current position in the queue'. $this->q->displayName .' is: #'. $qPosition[0]->position) : $qPosition[0]->position;
         }
         else return $this->returnText('Cannot get position, you are not in the queue'. $this->q->displayName);
     }
