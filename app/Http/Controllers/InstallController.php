@@ -181,26 +181,26 @@ class InstallController extends BaseController
                 'mod' => true
             ],
             'clear' => [
-                'name' => '!clear',
-                'description' => 'Clears the current queue. Usage: "!clear".',
+                'name' => '!clearq',
+                'description' => 'Clears the current queue. Usage: "!clearq".',
                 'code' => 'clear',
                 'mod' => true
             ],
             'add' => [
-                'name' => '!add',
-                'description' => 'Adds a subqueue. Required message. Usage example: "!add Fortnite".',
+                'name' => '!addq',
+                'description' => 'Adds a subqueue. Required message. Usage example: "!addq Fortnite".',
                 'code' => 'add $(query)',
                 'mod' => true
             ],
             'del' => [
-                'name' => '!del',
-                'description' => 'Deletes a subqueue. Required message. Usage example: "!del Fortnite".',
+                'name' => '!delq',
+                'description' => 'Deletes a subqueue. Required message. Usage example: "!delq Fortnite".',
                 'code' => 'del $(query)',
                 'mod' => true
             ],
             'set' => [
-                'name' => '!set',
-                'description' => 'Sets a subqueue as active queue. Required message. Usage example: "!set Fortnite".',
+                'name' => '!setq',
+                'description' => 'Sets a subqueue as active queue. Required message. Usage example: "!setq Fortnite".',
                 'code' => 'set $(query)',
                 'mod' => true
             ],
