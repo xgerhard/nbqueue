@@ -22,7 +22,10 @@ $router->get('install/manual', 'InstallController@startManual');
 
 $router->get('/', 'CommandController@QueryParser');
 
-$router->get('list/{id}/{name}', function ($id, $name)
+// Remove /list/ from the subdomain
+$strListPath = explode('.', $_SERVER['HTTP_HOST'])[0] === 'nbq' ? '' : 'list';
+
+$router->get($strListPath .'/{id}/{name}', function ($id, $name)
 {
     $oChannel = Channel::findOrFail((int) $id);
     if($oChannel)
