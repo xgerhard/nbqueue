@@ -15,6 +15,11 @@ class InstallController extends BaseController
         return view('install', ['commands' => $this->getQueueCommands()]);
     }
 
+    public function startManual()
+    {
+        return view('manual', ['commands' => $this->getQueueCommands()]);
+    }
+
     public function installAuto(Request $request)
     {
         $bSuccess = false;
