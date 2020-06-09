@@ -210,39 +210,27 @@ class QueueHandler
      *
      * @return string
     */
-    public function getPosition($bFull = true)
+    public function getPosition($oQueueUser = null, $bFull = true)
     {
-        if(!$this->u) return $this->returnText(RR_NO_USER);
-
-        $qPosition = DB::select('
-            SELECT
-                FIND_IN_SET(
-                    created_at,
-                    (
-                        SELECT GROUP_CONCAT(
-                            created_at ORDER BY created_at ASC
-                        )
-                        FROM
-                            queue_users
-                        WHERE
-                            queue_id = :quid
-                    )
-                ) AS position
-            FROM
-                queue_users
-            WHERE
-                queue_id = :qid
-            AND
-                user_id = :uid
-            LIMIT 1
-        ',
-        ['qid' => $this->q->id, 'uid' => $this->u->id, 'quid' => $this->q->id]);
-
-        if(isset($qPosition[0]))
+        if(!$oQueueUser)
         {
-            return $bFull === true ? $this->returnText('Your current position in the queue'. $this->q->displayName .' is: #'. $qPosition[0]->position) : $qPosition[0]->position;
+            if(!$this->u) throw new Exception(self::ERR_NO_USER);
+
+            $oQueueUser = QueueUser::where([
+                ['queue_id', '=', $this->q->id],
+                ['user_id', '=', $this->u->id]
+            ])->first();
+
+            if(!$oQueueUser) return $this->returnText('Cannot get position, you are not in the queue'. $this->q->displayName);
         }
-        else return $this->returnText('Cannot get position, you are not in the queue'. $this->q->displayName);
+
+        $iPosition = QueueUser::where([
+            ['queue_id', '=', $this->q->id],
+            ['created_at', '<', $oQueueUser->created_at]
+        ])->count();
+
+        $iPosition++;
+        return $bFull === true ? $this->returnText('Your current position in the queue'. $this->q->displayName .' is: #'. $iPosition) : $iPosition;
     }
 
     /**
@@ -268,9 +256,9 @@ class QueueHandler
             {
                 $oQueueUser->message = $strMessage;
                 $oQueueUser->save();
-                return $this->returnText('You are already in queue'. $this->q->displayName .' (position #'. $this->getPosition(false) .'), your queue message has been updated');
+                return $this->returnText('You are already in queue'. $this->q->displayName .' (position #'. $this->getPosition($oQueueUser, false) .'), your queue message has been updated');
             }
-            else return $this->returnText('You are already in queue'. $this->q->displayName .' (position #'. $this->getPosition(false) .')');
+            else return $this->returnText('You are already in queue'. $this->q->displayName .' (position #'. $this->getPosition($oQueueUser, false) .')');
         }
         else
         {
@@ -290,7 +278,7 @@ class QueueHandler
                 'user_level' => $this->getUserLevel($this->u->userLevel, true)
             ]);
 
-            if($oQueueUser) return $this->returnText('Successfully added to queue'. $this->q->displayName . ', your position is #'. $this->getPosition(false));
+            if($oQueueUser) return $this->returnText('Successfully added to queue'. $this->q->displayName . ', your position is #'. $this->getPosition($oQueueUser, false));
         }
     }
 
@@ -338,6 +326,7 @@ class QueueHandler
                     ['queue_id', '=', $this->c->active]
                 ])
                 ->orderBy('created_at', 'asc')
+                ->orderBy('id', 'desc')
                 ->first();
 
                 if($oNextQueueUser && $oNextQueueUser->id != $oQueueUser->id)
@@ -536,7 +525,7 @@ class QueueHandler
         {
             $this->c->active = $oQueue->id;
             $this->c->save();
-            return $this->returnText('Queue "'. $strName .'" is now the active queue');
+            return $this->returnText('Queue "'. $oQueue->name .'" is now the active queue');
         }
         else
         {
