@@ -11,7 +11,7 @@
         <div class="container">
             <h1>Queue list: {{$name}}</h1>
 
-            <div class="row">
+            <div class="row mb">
                 <div class="pull-right">
                     Show user messages:
                      <div class="btn-group btn-toggle"> 
@@ -28,7 +28,7 @@
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <h4 class="panel-title">
-                                <a data-toggle="collapse" href="#c{{$queue->id}}">Queue: <b>{{$queue->name}}</b>@if($queue->id == $channel->active), status: <b> @if($queue->is_open == 1)Open @else Closed @endif </b>@endif</a>
+                                <a class="accordion-toggle @if($queue->id != $channel->active && $queue->is_open == 1)collapsed @endif" data-toggle="collapse" href="#c{{$queue->id}}">Queue: <b>{{$queue->name}}</b>@if($queue->id == $channel->active), status: <b> @if($queue->is_open == 1)Open @else Closed @endif </b>@endif</a>
                             </h4>
                         </div>
                         <div id="c{{$queue->id}}" class="panel-collapse collapse @if($queue->id == $channel->active && $queue->is_open == 1)in @endif">
@@ -60,7 +60,19 @@
             }
             .user-message {
                 display: none;
-        }
+            }
+            .panel-heading .accordion-toggle:after {
+                font-family: 'Glyphicons Halflings';
+                content: "\e114";
+                float: right;
+                color: grey;
+            }
+            .panel-heading .accordion-toggle.collapsed:after {
+                content: "\e080";
+            }
+            .row.mb {
+                margin-bottom: 10px;
+            }
         </style>
         <script>
             $('.btn-toggle').click(function() {
