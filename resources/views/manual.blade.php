@@ -27,7 +27,7 @@
                 <td>{{$command['description']}}</td>
             </tr>
             <tr>
-                <td colspan=2>@if(isset($command['main_command']))<b>(Required)</b>@endif <code>!commands add {{$command['name']}} -ul={{$userLevel}}{{$alias}} {{$command['code']}}</code></td>
+                <td colspan=2>@if(isset($command['main_command']))<b>(Required)</b>@endif <code>!commands add {{$command['name']}} -cd=5 -ul={{$userLevel}}{{$alias}} {{$command['code']}}</code></td>
             </tr>
         @endforeach
         </tbody>
