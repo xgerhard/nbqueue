@@ -28,7 +28,7 @@
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <h4 class="panel-title">
-                                <a class="accordion-toggle @if($queue->id != $channel->active && $queue->is_open == 1)collapsed @endif" data-toggle="collapse" href="#c{{$queue->id}}">Queue: <b>{{$queue->name}}</b>@if($queue->id == $channel->active), status: <b> @if($queue->is_open == 1)Open @else Closed @endif </b>@endif</a>
+                                <a class="accordion-toggle @if($queue->id != $channel->active || !$queue->is_open)collapsed @endif" data-toggle="collapse" href="#c{{$queue->id}}">Queue: <b>{{$queue->name}}</b>@if($queue->id == $channel->active), status: <b> @if($queue->is_open == 1)Open @else Closed @endif </b>@endif</a>
                             </h4>
                         </div>
                         <div id="c{{$queue->id}}" class="panel-collapse collapse @if($queue->id == $channel->active && $queue->is_open == 1)in @endif">
