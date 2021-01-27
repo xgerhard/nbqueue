@@ -65,7 +65,7 @@ class QueueHandler
     */
     public function getList()
     {
-        return $this->returnText('Full list of users and queues can be found here: https://nbq.2g.be/'.  $this->c->id .'/'. urlencode($this->c->displayName) .' ');
+        return $this->returnText('Full list of users and queues can be found here: https://nbq.gerhard.dev/'.  $this->c->id .'/'. urlencode($this->c->displayName));
     }
 
     /**
@@ -584,7 +584,7 @@ class QueueHandler
     {
         $strReturnMessage = "";
         if($this->u) $strReturnMessage .= '@'. $this->u->displayName .': ';
-        return substr($strReturnMessage . $strMessage .'.', 0, 200);
+        return substr($strReturnMessage . $strMessage, 0, 200);
     }
 
     /**
