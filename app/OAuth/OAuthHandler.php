@@ -7,6 +7,7 @@ use App\OAuth\OAuthSession;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use App\src\Session;
+use Log;
 
 class OAuthHandler
 {
@@ -164,7 +165,8 @@ class OAuthHandler
     }
 
     private function handleError($strError)
-    {       
+    {
+        Log::error($strError);
         switch($strError)
         {
             case 'access_denied':

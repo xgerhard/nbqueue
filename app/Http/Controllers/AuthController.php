@@ -3,6 +3,8 @@ namespace App\Http\Controllers;
 
 use App\OAuth\OAuthHandler;
 use Illuminate\Http\Request;
+use Exception;
+use Log;
 
 class AuthController
 {
@@ -13,9 +15,10 @@ class AuthController
             $OAuthHandler = new OAuthHandler($strService);
             $OAuthHandler->runAuth($request);
         }
-        catch (Exception $e)
+        catch(Exception $e)
         {
-            dd($e);
+            Log::error($e);
+            echo 'Something went wrong, please try again later.';
         }
     }
 }
