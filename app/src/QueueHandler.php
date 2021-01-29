@@ -65,7 +65,7 @@ class QueueHandler
     */
     public function getList()
     {
-        return $this->returnText('Full list of users and queues can be found here: https://nbq.gerhard.dev/'.  $this->c->id .'/'. urlencode($this->c->displayName));
+        return $this->returnText('Full list of users and queues can be found here: https://nbq.gerhard.dev/'.  $this->c->id);
     }
 
     /**
