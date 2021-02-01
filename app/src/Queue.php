@@ -19,5 +19,15 @@ class Queue extends Model
         'user_level',
         'max_users'
     ];
+
+    public function channel()
+    {
+        return $this->hasOne('App\src\Channel', 'id', 'channel_id');
+    }
+
+    public function queueUsers()
+    {
+        return $this->hasMany('App\src\QueueUser', 'queue_id', 'id');
+    }
 }
 ?>

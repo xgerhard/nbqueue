@@ -29,6 +29,21 @@ class QueueHandler
         }
     }
 
+    public function getQueueUserByPosition($iPosition)
+    {
+        $aQueueUsers = QueueUser::where([
+            ['queue_id', '=', $this->q->id]
+        ])
+        ->orderBy('created_at', 'asc')
+        ->limit($iPosition)
+        ->get();
+
+        if($aQueueUsers && isset($aQueueUsers[$iPosition-1]))
+            return $aQueueUsers[$iPosition-1];
+
+        return false;
+    }
+
     /**
      * Returns current queue info
      *

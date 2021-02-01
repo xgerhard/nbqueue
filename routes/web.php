@@ -26,44 +26,7 @@ $router->get('/', 'CommandController@QueryParser');
 // Remove /list/ from the subdomain
 $strListPath = explode('.', $_SERVER['HTTP_HOST'])[0] === 'nbq' ? '' : 'list';
 
-$router->get($strListPath .'/{id}[/{name}]', function ($id, $name = null)
-{
-    $oChannel = Channel::findOrFail((int) $id);
-    if($oChannel)
-    {
-        $oChannelUser = User::where([
-            ['provider_id', '=', $oChannel->provider_id],
-            ['provider', '=', $oChannel->provider]
-        ])->first();
-
-        if($oChannelUser)
-            $name = $oChannelUser->displayName;
-        elseif($name)
-            $name = urldecode($name);
-
-        $aQueues = Queue::where([
-            ['channel_id', '=', $oChannel->id]
-        ])->get();
-
-        if($aQueues && $aQueues->isNotEmpty())
-        {
-            foreach($aQueues AS $oQueue)
-            {
-                $aQueueUsers = QueueUser::where([
-                    ['queue_id', '=', $oQueue->id]
-                ])
-                ->orderBy('created_at', 'asc')
-                ->get();
-
-                if($aQueueUsers && $aQueueUsers->isNotEmpty())
-                {
-                    $oQueue->users = $aQueueUsers;
-                }
-            }
-        }
-        return view('list', ['queues' => $aQueues, 'channel' => $oChannel, 'name' => $name]);
-    }
-});
+$router->get($strListPath .'/{channelId}[/{name}]', 'QueueController@list');
 
 /*$router->get('/', function () use ($router) {
     return $router->app->version();
