@@ -22,6 +22,8 @@ class QueueHandler
     */
     public function __construct($aChannel)
     {
+        echo '<pre>';
+        print_r($aChannel);
         if(!$this->start($aChannel))
         {
             return $this->returnText(self::ERR_DEFAULT);
@@ -363,18 +365,18 @@ class QueueHandler
      *
      * @return boolean
     */
-    private function start($aChannel)
+    private function start($oNbChannel)
     {
         $oChannel = Channel::where([
-            ['provider', '=', $aChannel['provider']],
-            ['provider_id', '=', $aChannel['providerId']]
+            ['provider', '=', $oNbChannel->provider],
+            ['provider_id', '=', $oNbChannel->providerId]
         ])->first();
 
         if(!$oChannel)
         {
             $oChannel = Channel::create([
-                'provider' => $aChannel['provider'],
-                'provider_id' => $aChannel['providerId']
+                'provider' => $oNbChannel->provider,
+                'provider_id' => $oNbChannel->providerId
             ]);
 
             if($oChannel)
@@ -400,8 +402,8 @@ class QueueHandler
         {
             $this->q->displayName = $this->q->name == 'default' ? '' : ' "'. ucfirst($this->q->name) .'"';
 
-            $oChannel->name = $aChannel['name'];
-            $oChannel->displayName = $aChannel['displayName'];
+            $oChannel->name = $oNbChannel->name;
+            $oChannel->displayName = $oNbChannel->displayName;
             return true;
         }
         return false;
@@ -412,33 +414,33 @@ class QueueHandler
      * If user doesn't exist yet, we add them to our database
      *
     */
-    public function setUser($aUser)
+    public function setUser($oNbUser)
     {
         $oUser = User::where([
-            ['provider_id', '=', $aUser['providerId']],
-            ['provider', '=', $aUser['provider']]
+            ['provider_id', '=', $oNbUser->providerId],
+            ['provider', '=', $oNbUser->provider]
         ])->first();
 
         if(!$oUser)
         {
             $oUser = User::create([
-                'provider' => $aUser['provider'],
-                'provider_id' => $aUser['providerId'],
-                'name' => $aUser['name'],
-                'displayName' => $aUser['displayName'],
+                'provider' => $oNbUser->provider,
+                'provider_id' => $oNbUser->providerId,
+                'name' => $oNbUser->name,
+                'displayName' => $oNbUser->displayName,
             ]);
         }
         else
         {
-            if($oUser->name != $aUser['name'] || $oUser->displayName != $aUser['displayName'])
+            if($oUser->name != $oNbUser->name || $oUser->displayName != $oNbUser->displayName)
             {
-                $oUser->name = $aUser['name'];
-                $oUser->displayName = $aUser['displayName'];
+                $oUser->name = $oNbUser->name;
+                $oUser->displayName = $oNbUser->displayName;
                 $oUser->save();
             }
         }
 
-        $oUser->userLevel = $aUser['userLevel'];
+        $oUser->userLevel = $oNbUser->userLevel;
         $this->u = $oUser;
     }
 

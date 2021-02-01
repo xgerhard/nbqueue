@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Laravel\Lumen\Routing\Controller as BaseController;
 use App\src\QueueHandler;
-use xgerhard\nbheaders\Nightbot;
+use xgerhard\nbheaders\nbheaders;
 
 class CommandController extends BaseController
 {
@@ -17,35 +17,35 @@ class CommandController extends BaseController
             {
                 array_shift($aQuery);
                 $strMessage = empty($aQuery) ? "" : urldecode(implode(" ", $aQuery));
+                $oNbHeaders = new nbheaders();
 
                 // If APP_DEBUG is set to true in your .env, you can set a test user & channel here, so the script works from the browser.
                 // This will manually set the request headers that are normally send by Nightbot urlFetch: https://docs.nightbot.tv/commands/variables/urlfetch
                 if(env('APP_DEBUG'))
                 {
-                    $request->headers->set('Nightbot-User', http_build_query([
+                    $oNbHeaders->setUser([
                         'name' => 'xgerhard',
                         'displayName' => 'xgerhard',
                         'provider' => 'twitch',
                         'providerId' => '12345678',
                         'userLevel' => 'owner'
-                    ]));
-                    $request->headers->set('Nightbot-Channel', http_build_query([
+                    ]);
+                    $oNbHeaders->setChannel([
                         'name' => 'xgerhard',
                         'displayName' => 'xgerhard',
                         'provider' => 'twitch',
                         'providerId' => '12345678'
-                    ]));
+                    ]);
                 }
 
-                $oNightbot = new Nightbot($request);
-                if(!$oNightbot->isNightbotRequest())
+                if(!$oNbHeaders->isNightbotRequest())
                 {
                     return 'This command only works through Nightbot.';
                 }
 
                 try{
-                    $oQH = new QueueHandler($oNightbot->getChannel());
-                    if($oNightbot->getUser()) $oQH->setUser($oNightbot->getUser());
+                    $oQH = new QueueHandler($oNbHeaders->getChannel());
+                    if($oNbHeaders->getUser()) $oQH->setUser($oNbHeaders->getUser());
 
                     switch($strAction)
                     {
