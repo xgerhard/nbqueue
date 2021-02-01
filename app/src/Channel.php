@@ -6,9 +6,6 @@ use App\src\User;
 
 class Channel extends Model 
 {
-    public $name;
-    public $displayName;
-
     protected $fillable = [
         'provider',
         'provider_id',
@@ -26,6 +23,18 @@ class Channel extends Model
     public function queues()
     {
         return $this->hasMany('App\src\Queue', 'channel_id', 'id');
+    }
+
+    public function activeQueue()
+    {
+        return $this->hasOne('App\src\Queue', 'id', 'active');
+    }
+
+    public function getQueue($strName)
+    {
+        return $this->queues()
+            ->where('name', '=', $strName)
+            ->first();
     }
 }
 ?>
