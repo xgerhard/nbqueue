@@ -310,6 +310,9 @@ class QueueHandler
         if(!$this->isAllowed('moderator'))
             return $this->returnText(self::ERR_NO_MOD);
 
+        if($iPosition == 0)
+            return $this->returnText('Unable to promote user in queue, no position specified');
+
         $oQueueUser = $this->getQueueUserByPosition($iPosition);
         if($oQueueUser)
         {
@@ -535,6 +538,12 @@ class QueueHandler
     */
     public function removeQueueUser($iPosition)
     {
+        if(!$this->isAllowed('moderator'))
+            return $this->returnText(self::ERR_NO_MOD);
+
+        if($iPosition == 0)
+            return $this->returnText('Unable to remove from queue, no position specified');
+
         $oQueueUser = $this->getQueueUserByPosition($iPosition);
         if($oQueueUser)
         {
