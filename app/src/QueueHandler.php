@@ -338,26 +338,45 @@ class QueueHandler
         $oChannelOwner = $this->getUserInfo($oNbChannel);
         if($oChannelOwner)
         {
-            if($oChannelOwner->channel())
-                $this->channel = $oChannelOwner->channel();
+            if($oChannelOwner->channel)
+            {
+                $this->channel = $oChannelOwner->channel;
+            }
             else
             {
-                $oChannel = Channel::create([
-                    'provider' => $oNbChannel->provider,
-                    'provider_id' => $oNbChannel->providerId,
-                    'user_id' => $oChannelOwner->id
-                ]);
+                $oChannelByProviderId = Channel::where([
+                    ['provider', '=', $oChannelOwner->provider],
+                    ['provider_id', '=', $oChannelOwner->provider_id]
+                ])->first();
 
-                if($oChannel)
+                if($oChannelByProviderId)
                 {
-                    $this->channel = $oChannel;
-                    $oQueue = $this->addQueue('default', 1);
-                    if($oQueue)
+                    // We used to save by provider & providerId, updating this to userId now.
+                    $oChannelByProviderId->user_id = $oChannelOwner->id;
+                    $oChannelByProviderId->save();
+                    $this->channel = $oChannelByProviderId;
+                }
+                else
+                {
+                    // New channel, provider(id) fields shouldn't be necessary anymore, we'll dump those once old records have been updated.
+                    $oChannel = Channel::create([
+                        'provider' => '',
+                        'provider_id' => '',
+                        'user_id' => $oChannelOwner->id
+                    ]);
+    
+                    if($oChannel)
                     {
-                        $oChannel->active = $oQueue->id;
-                        $oChannel->save();
+                        $this->channel = $oChannel;
+                        $oQueue = $this->addQueue('default', 1);
+                        if($oQueue)
+                        {
+                            $oChannel->active = $oQueue->id;
+                            $oChannel->save();
+                        }
                     }
                 }
+
             }
         }
 

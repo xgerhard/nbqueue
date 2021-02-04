@@ -16,7 +16,6 @@ class Channel extends Model
 
     public function channelOwner()
     {
-        return User::where([['provider_id', '=', $this->provider_id], ['provider', '=', $this->provider]])->first();
         return $this->hasOne('App\src\User', 'id', 'user_id');
     }
 

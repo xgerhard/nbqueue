@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>{{ $channel->channelOwner()->displayName }} - NBQ</title>
+        <title>{{ $channel->channelOwner->displayName }} - NBQ</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
@@ -9,7 +9,7 @@
     </head>
     <body>
         <div class="container">
-            <h1>Queue list: {{ $channel->channelOwner()->displayName }}</h1>
+            <h1>Queue list: {{ $channel->channelOwner->displayName }}</h1>
 
             <div class="row mb">
                 <div class="pull-right">
