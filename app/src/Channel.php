@@ -2,7 +2,6 @@
 namespace App\src;
 
 use Illuminate\Database\Eloquent\Model;
-use App\src\User;
 
 class Channel extends Model 
 {

@@ -1,7 +1,6 @@
 <?php
 namespace App\src;
 
-use App\src\Channel;
 use Illuminate\Database\Eloquent\Model;
 
 class User extends Model 
