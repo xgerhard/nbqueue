@@ -12,21 +12,30 @@ class QueueHandler
     const ERR_DEFAULT = 'Something went wrong, please contact xgerhard';
     const ERR_NO_MOD = 'This command is only available for moderators';
 
-    private $q = null;
-    private $c = null;
-    private $u = null;
+    private $channel = null;
+    private $user = null;
 
     /**
      * Runs 'start' function on load, we need to have a channel and queue object to start
      *
     */
-    public function __construct($aChannel)
+    public function __construct($oChannel)
     {
-        if(!$this->start($aChannel))
+        if(!$this->start($oChannel))
         {
             return $this->returnText(self::ERR_DEFAULT);
             die;
         }
+    }
+
+    public function getQueueUserByPosition($iPosition)
+    {
+        $iPosition = (int) $iPosition;
+        $aQueueUsers = $this->channel->activeQueue->nextUsers($iPosition);
+        if($aQueueUsers && isset($aQueueUsers[$iPosition-1]))
+            return $aQueueUsers[$iPosition-1];
+
+        return false;
     }
 
     /**
@@ -35,27 +44,17 @@ class QueueHandler
     */
     public function info()
     {
-        $iCount = QueueUser::where([
-            ['queue_id', '=', $this->c->active]
-        ])->count();
+        $iCount = $this->channel->activeQueue->queueUsers->count();
+        $strRes = 'Current queue: "'. $this->channel->activeQueue->name .'", the queue is currently '. ($this->channel->activeQueue->is_open == 1 ? 'open for "'. $this->getUserLevel($this->channel->activeQueue->user_level) .'"' : 'closed') .' and contains '. $iCount .' user'. ($iCount == 1 ? '' : 's');
 
-        $strRes = 'Current queue: "'. $this->q->name .'", the queue is currently '. ($this->q->is_open == 1 ? 'open for "'. $this->getUserLevel($this->q->user_level) .'"' : 'closed') .' and contains '. $iCount .' user'. ($iCount == 1 ? '' : 's');
-
-        // List available queues
-        $aQueues = Queue::where([
-            ['channel_id', '=', $this->c->id],
-            ['id', '!=', $this->q->id]
-        ])->get();
-
-        if($aQueues && !$aQueues->isEmpty())
+        if($this->channel->queues->count() > 0)
         {
-            foreach($aQueues AS $oQueue)
+            foreach($this->channel->queues as $oQueue)
             {
                 $aQueueNames[] = $oQueue->name;
             }
-            $strRes .= ". Available queues: [". implode(", ", $aQueueNames) ."]";
+            $strRes .= '. Available queues: ['. implode(', ', $aQueueNames) .']';
         }
-
         return $this->returnText($strRes);
     }
 
@@ -65,7 +64,7 @@ class QueueHandler
     */
     public function getList()
     {
-        return $this->returnText('Full list of users and queues can be found here: https://nbq.gerhard.dev/'.  $this->c->id);
+        return $this->returnText('Full list of users and queues can be found here: https://nbq.gerhard.dev/'.  $this->channel->id);
     }
 
     /**
@@ -75,10 +74,14 @@ class QueueHandler
     */
     public function clearQueue($iQueueId = false)
     {
-        if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
+        if(!$this->isAllowed('moderator'))
+            return $this->returnText(self::ERR_NO_MOD);
 
-        DB::table('queue_users')->where('queue_id', '=', ($iQueueId === false ? $this->c->active : $iQueueId))->delete();
-        return $this->returnText('Successfully cleared the queue'. $this->q->displayName);
+        $oQueue = $this->channel->queues->find($iQueueId === false ? $this->channel->active : $iQueueId);
+        if($oQueue)
+            $oQueue->queueUsers()->delete();
+
+        return $this->returnText('Successfully cleared queue "'. $this->channel->activeQueue->name .'"');
     }
 
     /**
@@ -86,29 +89,24 @@ class QueueHandler
      *
      * @return string
     */
-    public function getListQueue($iLimit = 5)
+    public function getListQueue($iLimit)
     {
-        if($iLimit == 0) $iLimit = 5;
+        if($iLimit == 0)
+            $iLimit = 5;
+        elseif($iLimit > 50)
+            $iLimit = 50;
 
-        $aQueueUsers = QueueUser::where([
-            ['queue_id', '=', $this->c->active]
-        ])
-        ->orderBy('created_at', 'asc')
-        ->limit($iLimit === false ? 50 : (int) $iLimit)
-        ->get();
-
-        if(!$aQueueUsers || $aQueueUsers->isEmpty())
-        {
-            return $this->returnText('Unable to list queue'. ($this->q->name ? ' \''. $this->q->name .'\'' : '') .', queue is empty');
-        }
+        $aQueueUsers = $this->channel->activeQueue->nextUsers($iLimit);
+        if($aQueueUsers->count() == 0)
+            return $this->returnText('Unable to list queue "'. $this->channel->activeQueue->name .'", queue is empty');
         else
         {
             $aUsers = [];
-            foreach($aQueueUsers AS $oQueueUser)
+            foreach($aQueueUsers as $oQueueUser)
             {
                 $aUsers[] = $oQueueUser->user->displayName;
             }
-            return $this->returnText('Next '. (count($aUsers) > 1 ? count($aUsers) .' persons' : 'person') .' in the queue'. $this->q->displayName .': '. implode(", ", $aUsers));
+            return $this->returnText('Next '. (count($aUsers) > 1 ? count($aUsers) .' persons' : 'person') .' in the queue "'. $this->channel->activeQueue->name .'": '. implode(', ', $aUsers));
         }
     }
 
@@ -119,7 +117,8 @@ class QueueHandler
     */
     public function getNext($strMessage, $bRandom = false)
     {
-        if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
+        if(!$this->isAllowed('moderator'))
+            return $this->returnText(self::ERR_NO_MOD);
 
         $iChars = 0;
         $iCharLimit = 150;
@@ -127,36 +126,34 @@ class QueueHandler
         $iUserLevel = 1;
         $aMessage = array_values(array_filter(explode(' ', $strMessage)));
 
-        if(isset($aMessage[0])) $iLimit = $aMessage[0];
+        if(isset($aMessage[0]))
+            $iLimit = $aMessage[0];
+
         if(isset($aMessage[1]))
         {
-            if(substr($aMessage[1], -1) == 's') $aMessage[1] = substr($aMessage[1], 0, -1);
+            if(substr($aMessage[1], -1) == 's')
+                $aMessage[1] = substr($aMessage[1], 0, -1);
+
             $iUserLevel = $this->getUserLevel($aMessage[1], true);
-            if(!$iUserLevel) return $this->returnText('Invalid UserLevel provided: "'. $aMessage[1] .'". Available UserLevels: moderator, regular, subscriber, vip, everyone');
+            if(!$iUserLevel)
+                return $this->returnText('Invalid UserLevel provided: "'. $aMessage[1] .'". Available UserLevels: moderator, regular, subscriber, vip, everyone');
         }
 
         $iLimit = (int) $iLimit;
-        if($iLimit == 0) $iLimit = 1;
-        if($iLimit > 10) $iLimit = 10;
+        if($iLimit == 0)
+            $iLimit = 1;
+        elseif($iLimit > 10)
+            $iLimit = 10;
 
-        $aQueueUsers = QueueUser::where([
-            ['queue_id', '=', $this->c->active],
-            ['user_level', '>=', $iUserLevel]
-        ])
-        ->orderByRaw($bRandom === false ? 'created_at' : 'RAND()', 'asc')
-        ->limit($iLimit)
-        ->get();
-
-        if(!$aQueueUsers || $aQueueUsers->isEmpty())
-        {
-            return $this->returnText('Unable to get next from queue'. ($this->q->displayName ? ' '. $this->q->displayName : '') .', queue is empty');
-        }
+        $aQueueUsers = $this->channel->activeQueue->nextUsers($iLimit, $iUserLevel, $bRandom);
+        if($aQueueUsers->isEmpty())
+            return $this->returnText('Unable to get next person from queue "'. $this->channel->activeQueue->name .'", queue is empty');
         else
         {
             $aUsers = [];
-            foreach($aQueueUsers AS $oQueueUser)
+            foreach($aQueueUsers as $oQueueUser)
             {
-                $strTempRes = $oQueueUser->user->displayName . (trim($oQueueUser->message) == "" ? "" : ', with message: "'. $oQueueUser->message .'"');
+                $strTempRes = $oQueueUser->user->displayName . (trim($oQueueUser->message) == '' ? '' : ', with message: "'. $oQueueUser->message .'"');
                 if(($iChars + strlen($strTempRes)) <= $iCharLimit)
                 {
                     $aUsers[] = $strTempRes;
@@ -164,7 +161,7 @@ class QueueHandler
                     $oQueueUser->forceDelete();
                 }
             }
-            return $this->returnText('Next '. (count($aUsers) > 1 ? count($aUsers) .' persons' : 'person') .' in the queue'. $this->q->displayName .': '. implode(", ", $aUsers));
+            return $this->returnText('Next '. (count($aUsers) > 1 ? count($aUsers) .' persons' : 'person') .' in the queue "'. $this->channel->activeQueue->name .'": '. implode(", ", $aUsers));
         }
     }
 
@@ -175,15 +172,16 @@ class QueueHandler
     */
     public function openQueue()
     {
-        if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
+        if(!$this->isAllowed('moderator'))
+            return $this->returnText(self::ERR_NO_MOD);
 
-        if($this->q->is_open == 0)
+        if($this->channel->activeQueue->is_open == 0)
         {
-            $this->q->is_open = 1;
-            $this->q->save();
-            return $this->returnText('Queue'. $this->q->displayName .' is now open');
+            $this->channel->activeQueue->is_open = 1;
+            $this->channel->activeQueue->save();
+            return $this->returnText('Queue "'. $this->channel->activeQueue->name .'" is now open');
         }
-        else return $this->returnText('Queue'. $this->q->displayName .' is already open');
+        else return $this->returnText('Queue "'. $this->channel->activeQueue->name .'" is already open');
     }
 
     /**
@@ -193,16 +191,16 @@ class QueueHandler
     */
     public function closeQueue()
     {
-        if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
+        if(!$this->isAllowed('moderator'))
+            return $this->returnText(self::ERR_NO_MOD);
 
-        if($this->q->is_open == 1)
+        if($this->channel->activeQueue->is_open == 1)
         {
-            $this->q->is_open = 0;
-            $this->q->save();
-
-            return $this->returnText('Queue'. $this->q->displayName .' is now closed');
+            $this->channel->activeQueue->is_open = 0;
+            $this->channel->activeQueue->save();
+            return $this->returnText('Queue "'. $this->channel->activeQueue->name .'" is now closed');
         }
-        else return $this->returnText('Queue'. $this->q->displayName .' is already closed');
+        else return $this->returnText('Queue "'. $this->channel->activeQueue->name .'" is already closed');
     }
 
     /**
@@ -214,23 +212,21 @@ class QueueHandler
     {
         if(!$oQueueUser)
         {
-            if(!$this->u) throw new Exception(self::ERR_NO_USER);
+            if(!$this->user)
+                throw new Exception(self::ERR_NO_USER);
 
-            $oQueueUser = QueueUser::where([
-                ['queue_id', '=', $this->q->id],
-                ['user_id', '=', $this->u->id]
-            ])->first();
-
-            if(!$oQueueUser) return $this->returnText('Cannot get position, you are not in the queue'. $this->q->displayName);
+            $oQueueUser = $this->channel->activeQueue->getUser($this->user->id);
+            if(!$oQueueUser)
+                return $this->returnText('Cannot get position, you are not in queue "'. $this->channel->activeQueue->name .'"');
         }
 
         $iPosition = QueueUser::where([
-            ['queue_id', '=', $this->q->id],
+            ['queue_id', '=', $this->channel->activeQueue->id],
             ['created_at', '<', $oQueueUser->created_at]
         ])->count();
 
         $iPosition++;
-        return $bFull === true ? $this->returnText('Your current position in the queue'. $this->q->displayName .' is: #'. $iPosition) : $iPosition;
+        return $bFull === true ? $this->returnText('Your current position in queue "'. $this->channel->activeQueue->name .'" is: #'. $iPosition) : $iPosition;
     }
 
     /**
@@ -240,45 +236,47 @@ class QueueHandler
     */
     public function joinQueue($strMessage)
     {
-        if(!$this->q->is_open) return $this->returnText('The queue'. $this->q->displayName .' is currently closed');
-        if(!$this->u) throw new Exception(self::ERR_NO_USER);
-        if(!$this->isAllowed($this->getUserLevel($this->q->user_level))) return $this->returnText('The queue'. $this->q->displayName .' is currently only open for "'. $this->getUserLevel($this->q->user_level) .'s"');
-        if(strlen($strMessage) > 100) return $this->returnText('Error: Max length of user message is 100');
+        if(!$this->channel->activeQueue->is_open)
+            return $this->returnText('The queue "'. $this->channel->activeQueue->name .'" is currently closed');
 
-        $oQueueUser = QueueUser::where([
-            ['user_id', '=', $this->u->id],
-            ['queue_id', '=', $this->c->active]
-        ])->first();
+        if(!$this->user)
+            throw new Exception(self::ERR_NO_USER);
 
+        if(!$this->isAllowed($this->getUserLevel($this->channel->activeQueue->user_level)))
+            return $this->returnText('The queue "'. $this->channel->activeQueue->name .'" is currently only open for "'. $this->getUserLevel($this->channel->activeQueue->user_level) .'s"');
+
+        if(strlen($strMessage) > 100)
+            return $this->returnText('Error: Max length of user message is 100');
+
+        $oQueueUser = $this->channel->activeQueue->getUser($this->user->id);
         if($oQueueUser)
         {
             if($oQueueUser->message != $strMessage)
             {
                 $oQueueUser->message = $strMessage;
                 $oQueueUser->save();
-                return $this->returnText('You are already in queue'. $this->q->displayName .' (position #'. $this->getPosition($oQueueUser, false) .'), your queue message has been updated');
+                return $this->returnText('You are already in queue "'. $this->channel->activeQueue->name .'" (position #'. $this->getPosition($oQueueUser, false) .'), your queue message has been updated');
             }
-            else return $this->returnText('You are already in queue'. $this->q->displayName .' (position #'. $this->getPosition($oQueueUser, false) .')');
+            else
+                return $this->returnText('You are already in queue "'. $this->channel->activeQueue->name .'" (position #'. $this->getPosition($oQueueUser, false) .')');
         }
         else
         {
-            if($this->q->max_users != 0)
+            if($this->channel->activeQueue->max_users != 0)
             {
-                $iQueryUsers = QueueUser::where([
-                    ['queue_id', '=', $this->c->active]
-                ])->count();
-
-                if($iQueryUsers >= $this->q->max_users) return $this->returnText('The queue'. $this->q->displayName .' is currently full, limit: '. $this->q->max_users);
+                if($this->channel->activeQueue->queueUsers->count() >= $this->channel->activeQueue->max_users)
+                    return $this->returnText('The queue "'. $this->channel->activeQueue->name .'" is currently full, limit: '. $this->channel->activeQueue->max_users);
             }
 
             $oQueueUser = QueueUser::create([
-                'user_id' => $this->u->id,
-                'queue_id' => $this->c->active,
+                'user_id' => $this->user->id,
+                'queue_id' => $this->channel->active,
                 'message' => $strMessage,
-                'user_level' => $this->getUserLevel($this->u->userLevel, true)
+                'user_level' => $this->getUserLevel($this->user->userLevel, true)
             ]);
 
-            if($oQueueUser) return $this->returnText('Successfully added to queue'. $this->q->displayName . ', your position is #'. $this->getPosition($oQueueUser, false));
+            if($oQueueUser)
+                return $this->returnText('Successfully joined queue "'. $this->channel->activeQueue->name . '", your position is #'. $this->getPosition($oQueueUser, false));
         }
     }
 
@@ -289,57 +287,47 @@ class QueueHandler
     */
     public function leaveQueue()
     {
-        if(!$this->u) return $this->returnText(self::ERR_NO_USER);
+        if(!$this->user)
+            return $this->returnText(self::ERR_NO_USER);
 
-        $oQueueUser = QueueUser::where([
-            ['user_id', '=', $this->u->id],
-            ['queue_id', '=', $this->c->active]
-        ])->first();
-
+        $oQueueUser = $this->channel->activeQueue->getUser($this->user->id);
         if($oQueueUser)
         {
             $oQueueUser->forceDelete();
-            return $this->returnText('Successfully removed from queue'. $this->q->displayName);
+            return $this->returnText('Successfully removed from queue "'. $this->channel->activeQueue->name .'"');
         }
         else
-        {
-            return $this->returnText('Unable to leave, you are not in queue'. $this->q->displayName);
-        }
+            return $this->returnText('Unable to leave, you are not in queue "'. $this->channel->activeQueue->name .'"');
     }
 
     /**
-     * Promotes a user to the first position of the current queue
+     * Promotes a user by position to the first position of the current queue
      *
      * @return string
     */
-    public function promoteUser($id = 0)
+    public function promoteUser($iPosition)
     {
-        if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
+        if(!$this->isAllowed('moderator'))
+            return $this->returnText(self::ERR_NO_MOD);
 
-        $id = (int) $id;
-        $oQueueUser = QueueUser::find($id);
+        if($iPosition == 0)
+            return $this->returnText('Unable to promote user in queue, no position specified');
+
+        $oQueueUser = $this->getQueueUserByPosition($iPosition);
         if($oQueueUser)
         {
-            if($oQueueUser->queue->channel_id == $this->c->id)
+            $aNextQueueUsers = $this->channel->activeQueue->nextUsers(1);
+            if($aNextQueueUsers->count() == 1 && $aNextQueueUsers[0]->id != $oQueueUser->id)
             {
-                $oNextQueueUser = QueueUser::where([
-                    ['queue_id', '=', $this->c->active]
-                ])
-                ->orderBy('created_at', 'asc')
-                ->orderBy('id', 'desc')
-                ->first();
-
-                if($oNextQueueUser && $oNextQueueUser->id != $oQueueUser->id)
-                {
-                    $oQueueUser->created_at = strtotime($oNextQueueUser->created_at)-1;
-                    $oQueueUser->save();
-                    return $this->returnText('Successfully promoted '. $oQueueUser->user->displayName .' to first position of the queue');
-                }
-                else return $this->returnText('Unable to promote user in queue, user already first position in queue'); 
+                $oQueueUser->created_at = strtotime($aNextQueueUsers[0]->created_at)-1;
+                $oQueueUser->save();
+                return $this->returnText('Successfully promoted '. $oQueueUser->user->displayName .' to first position of the queue');
             }
-            else return $this->returnText('Unable to promote user in queue, queue doesn\'t belong to this channel');
+            else
+                return $this->returnText('Unable to promote user in queue, user already first position in queue');
         }
-        else return $this->returnText('Unable to promote user in queue, user not found');
+        else
+            return $this->returnText('Unable to promote user in queue, user not found');
     }
 
     /**
@@ -348,48 +336,85 @@ class QueueHandler
      *
      * @return boolean
     */
-    private function start($aChannel)
+    private function start($oNbChannel)
     {
-        $oChannel = Channel::where([
-            ['provider', '=', $aChannel['provider']],
-            ['provider_id', '=', $aChannel['providerId']]
+        $oChannelOwner = $this->getUserInfo($oNbChannel);
+        if($oChannelOwner)
+        {
+            if($oChannelOwner->channel)
+            {
+                $this->channel = $oChannelOwner->channel;
+            }
+            else
+            {
+                $oChannelByProviderId = Channel::where([
+                    ['provider', '=', $oChannelOwner->provider],
+                    ['provider_id', '=', $oChannelOwner->provider_id]
+                ])->first();
+
+                if($oChannelByProviderId)
+                {
+                    // We used to save by provider & providerId, updating this to userId now.
+                    $oChannelByProviderId->user_id = $oChannelOwner->id;
+                    $oChannelByProviderId->save();
+                    $this->channel = $oChannelByProviderId;
+                }
+                else
+                {
+                    // New channel, provider(id) fields shouldn't be necessary anymore, we'll dump those once old records have been updated.
+                    $oChannel = Channel::create([
+                        'provider' => '',
+                        'provider_id' => '',
+                        'user_id' => $oChannelOwner->id
+                    ]);
+    
+                    if($oChannel)
+                    {
+                        $this->channel = $oChannel;
+                        $oQueue = $this->addQueue('default', 1);
+                        if($oQueue)
+                        {
+                            $oChannel->active = $oQueue->id;
+                            $oChannel->save();
+                        }
+                    }
+                }
+
+            }
+        }
+
+        if($this->channel && $this->channel->activeQueue)
+            return true;
+
+        return false;
+    }
+
+    public function getUserInfo($oNbUser)
+    {
+        $oUser = User::where([
+            ['provider_id', '=', $oNbUser->providerId],
+            ['provider', '=', $oNbUser->provider]
         ])->first();
 
-        if(!$oChannel)
+        if(!$oUser)
         {
-            $oChannel = Channel::create([
-                'provider' => $aChannel['provider'],
-                'provider_id' => $aChannel['providerId']
+            $oUser = User::create([
+                'provider' => $oNbUser->provider,
+                'provider_id' => $oNbUser->providerId,
+                'name' => $oNbUser->name,
+                'displayName' => $oNbUser->displayName,
             ]);
-
-            if($oChannel)
-            {
-                $this->c = $oChannel;
-                $oQueue = $this->addQueue('default', 1);
-                if($oQueue)
-                {
-                    $oChannel->active = $oQueue->id;
-                    $oChannel->save();
-                    $this->q = $oQueue;
-                }
-            }
         }
         else
         {
-            $this->c = $oChannel;
-            $oQueue = Queue::find($oChannel->active);
-            if($oQueue) $this->q = $oQueue;
+            if($oUser->name != $oNbUser->name || $oUser->displayName != $oNbUser->displayName)
+            {
+                $oUser->name = $oNbUser->name;
+                $oUser->displayName = $oNbUser->displayName;
+                $oUser->save();
+            }
         }
-
-        if($this->q && $this->c)
-        {
-            $this->q->displayName = $this->q->name == 'default' ? '' : ' "'. ucfirst($this->q->name) .'"';
-
-            $oChannel->name = $aChannel['name'];
-            $oChannel->displayName = $aChannel['displayName'];
-            return true;
-        }
-        return false;
+        return $oUser;
     }
 
     /**
@@ -397,34 +422,11 @@ class QueueHandler
      * If user doesn't exist yet, we add them to our database
      *
     */
-    public function setUser($aUser)
+    public function setUser($oNbUser)
     {
-        $oUser = User::where([
-            ['provider_id', '=', $aUser['providerId']],
-            ['provider', '=', $aUser['provider']]
-        ])->first();
-
-        if(!$oUser)
-        {
-            $oUser = User::create([
-                'provider' => $aUser['provider'],
-                'provider_id' => $aUser['providerId'],
-                'name' => $aUser['name'],
-                'displayName' => $aUser['displayName'],
-            ]);
-        }
-        else
-        {
-            if($oUser->name != $aUser['name'] || $oUser->displayName != $aUser['displayName'])
-            {
-                $oUser->name = $aUser['name'];
-                $oUser->displayName = $aUser['displayName'];
-                $oUser->save();
-            }
-        }
-
-        $oUser->userLevel = $aUser['userLevel'];
-        $this->u = $oUser;
+        $oUser = $this->getUserInfo($oNbUser);
+        $oUser->userLevel = $oNbUser->userLevel;
+        $this->user = $oUser;
     }
 
     /**
@@ -434,33 +436,33 @@ class QueueHandler
     */
     public function addQueue($strName, $iOpen = 0, $bText = false)
     {
-        if($bText && !$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
-        if(trim($strName) == "") return $this->returnText('No queue name specified to add');
+        if($bText && !$this->isAllowed('moderator'))
+            return $this->returnText(self::ERR_NO_MOD);
 
-        $oQueue = Queue::where([
-            ['channel_id', '=', $this->c->id],
-            ['name', '=', $strName]
-        ])->first();
+        if(trim($strName) == '')
+            return $this->returnText('No queue name given');
 
+        $oQueue = $this->channel->getQueue($strName);
         if(!$oQueue)
         {
             $oQueue = Queue::create([
-                'channel_id' => $this->c->id,
+                'channel_id' => $this->channel->id,
                 'name' => $strName,
                 'is_open' => ($iOpen == 0 ? 0 : 1)
             ]);
         }
-        elseif($bText) return $this->returnText('Queue "'. $strName .'" already exists');
+        elseif($bText)
+            return $this->returnText('Queue "'. $strName .'" already exists');
 
         if($bText === false)
         {
-            if($oQueue) return $oQueue;
+            if($oQueue)
+                return $oQueue;
+
             return false;
         }
         elseif($oQueue)
-        {
             return $this->returnText('Successfully added queue "'. $strName .'"');
-        }
     }
 
     /**
@@ -470,35 +472,32 @@ class QueueHandler
     */
     public function deleteQueue($strName)
     {
-        if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
-        if(trim($strName) == "") return $this->returnText('No queue name specified to delete');
-        if(strtolower(trim($strName)) == 'default') return $this->returnText('Cannot delete the \'default\' queue');
+        if(!$this->isAllowed('moderator'))
+            return $this->returnText(self::ERR_NO_MOD);
 
-        $oQueue = Queue::where([
-            ['channel_id', '=', $this->c->id],
-            ['name', '=', $strName]
-        ])->first();
+        if(trim($strName) == '')
+            return $this->returnText('No queue name given');
 
+        if(strtolower(trim($strName)) == 'default')
+            return $this->returnText('Cannot delete the "default" queue');
+
+        $oQueue = $this->channel->getQueue($strName);
         if($oQueue)
         {
-            if($this->c->active == $oQueue->id)
+            if($this->channel->active == $oQueue->id)
             {
                 // were deleting the current active queue so we have to set the default queue active again
-                $oDefaultQueue = Queue::where([
-                    ['channel_id', '=', $this->c->id],
-                    ['name', '=', 'default']
-                ])->first();
-
+                $oDefaultQueue = $this->channel->getQueue('default');
                 if($oDefaultQueue)
                 {
-                    $this->c->active = $oDefaultQueue->id;
-                    $this->c->save();
+                    $this->channel->active = $oDefaultQueue->id;
+                    $this->channel->save();
                 }
             }
 
             $this->clearQueue($oQueue->id);
             $oQueue->forceDelete();
-            return $this->returnText('Successfully deleted queue "'. $strName.'"');
+            return $this->returnText('Successfully deleted queue "'. $strName .'"');
         }
         else
         {
@@ -513,18 +512,17 @@ class QueueHandler
     */
     public function setQueue($strName)
     {
-        if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
-        if(trim($strName) == "") return $this->returnText('No queue name specified to set active');
+        if(!$this->isAllowed('moderator'))
+            return $this->returnText(self::ERR_NO_MOD);
 
-        $oQueue = Queue::where([
-            ['channel_id', '=', $this->c->id],
-            ['name', '=', $strName]
-        ])->first();
+        if(trim($strName) == '')
+            return $this->returnText('No queue name specified to set active');
 
+        $oQueue = $this->channel->getQueue($strName);
         if($oQueue)
         {
-            $this->c->active = $oQueue->id;
-            $this->c->save();
+            $this->channel->active = $oQueue->id;
+            $this->channel->save();
             return $this->returnText('Queue "'. $oQueue->name .'" is now the active queue');
         }
         else
@@ -534,24 +532,26 @@ class QueueHandler
     }
 
     /**
-     * Remove user from queue by QueueUserId
+     * Remove user from queue by position
      *
      * @return string
     */
-    public function removeQueueUser($id = 0)
+    public function removeQueueUser($iPosition)
     {
-        $id = (int) $id;
-        $oQueueUser = QueueUser::find($id);
+        if(!$this->isAllowed('moderator'))
+            return $this->returnText(self::ERR_NO_MOD);
+
+        if($iPosition == 0)
+            return $this->returnText('Unable to remove from queue, no position specified');
+
+        $oQueueUser = $this->getQueueUserByPosition($iPosition);
         if($oQueueUser)
         {
-            if($oQueueUser->queue->channel_id == $this->c->id)
-            {
-                $oQueueUser->forceDelete();
-                return $this->returnText('Successfully removed user from queue');
-            }
-            else return $this->returnText('Unable to remove from queue, queue doesn\'t belong to this channel');
+            $oQueueUser->forceDelete();
+            return $this->returnText('Successfully removed user from queue');
         }
-        else return $this->returnText('Unable to remove from queue, user not found');
+        else
+            return $this->returnText('Unable to remove from queue, user not found');
     }
 
     /**
@@ -561,16 +561,19 @@ class QueueHandler
     */
     public function setQueueLimit($strLimit)
     {
-        if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
-        if(trim($strLimit) == '') return $this->returnText('No queue limit provided');
+        if(!$this->isAllowed('moderator'))
+            return $this->returnText(self::ERR_NO_MOD);
+
+        if(trim($strLimit) == '')
+            return $this->returnText('No queue limit provided');
 
         $iLimit = abs($strLimit);
         if($iLimit > 9999)
             return $this->returnText('Invalid queue limit provided, number must be less than 9999');
         else
         {
-            $this->q->max_users = $iLimit;
-            $this->q->save();
+            $this->channel->activeQueue->max_users = $iLimit;
+            $this->channel->activeQueue->save();
             return $this->returnText('Successfully set the queue limit to: '. ($iLimit == 0 ? 'unlimited (0)' : $iLimit));
         }
     }
@@ -582,8 +585,11 @@ class QueueHandler
     */
     public function returnText($strMessage)
     {
-        $strReturnMessage = "";
-        if($this->u) $strReturnMessage .= '@'. $this->u->displayName .': ';
+        $strReturnMessage = '';
+        $strMessage = str_replace('queue "default"', 'queue', $strMessage);
+        if($this->user)
+            $strReturnMessage .= '@'. $this->user->displayName .': ';
+
         return substr($strReturnMessage . $strMessage, 0, 200);
     }
 
@@ -594,14 +600,16 @@ class QueueHandler
     */
     public function setUserLevel($strUserLevel)
     {
-        if(!$this->isAllowed('moderator')) return $this->returnText(self::ERR_NO_MOD);
+        if(!$this->isAllowed('moderator'))
+            return $this->returnText(self::ERR_NO_MOD);
+
         $strUserLevel = trim(strtolower($strUserLevel));
         if($iUserLevel = $this->getUserLevel($strUserLevel, true))
         {
-            if($this->q->user_level != $iUserLevel)
+            if($this->channel->activeQueue->user_level != $iUserLevel)
             {
-                $this->q->user_level = $iUserLevel;
-                $this->q->save();
+                $this->channel->activeQueue->user_level = $iUserLevel;
+                $this->channel->activeQueue->save();
                 return $this->returnText('Successfully set the UserLevel to "'. $strUserLevel .'"');
             }
             else return $this->returnText('The current queue is already set to UserLevel "'. $strUserLevel .'"');
@@ -616,7 +624,7 @@ class QueueHandler
     */
     private function isAllowed($strUserLevel)
     {
-        if($this->u)
+        if($this->user)
         {
             $aAllowed = ['owner'];
             switch($strUserLevel)
@@ -641,7 +649,7 @@ class QueueHandler
                     $aAllowed = ['owner', 'moderator', 'twitch_vip', 'regular', 'subscriber'];
                 break;
             }
-            return in_array($this->u->userLevel, $aAllowed);
+            return in_array($this->user->userLevel, $aAllowed);
         }
         return false;
     }

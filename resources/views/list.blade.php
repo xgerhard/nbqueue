@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>{{$name}} - NBQ</title>
+        <title>{{ $channel->channelOwner->displayName }} - NBQ</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
@@ -9,7 +9,7 @@
     </head>
     <body>
         <div class="container">
-            <h1>Queue list: {{$name}}</h1>
+            <h1>Queue list: {{ $channel->channelOwner->displayName }}</h1>
 
             <div class="row mb">
                 <div class="pull-right">
@@ -21,22 +21,30 @@
                 </div>
             </div>
 
+            <div class="alert alert-info alert-dismissible" role="alert">
+                <strong>Info for moderators:</strong> you might have noticed the Remove / Promote ID is gone from this page, instead you can now use the queue position of the user to remove or promote the user. The usage will be the same: 
+                <strong>!q remove 2</strong> or <strong>!q promote 2</strong>, to remove / promote the second user in the queue.
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
             <div class="row">
-                @if(isset($queues) && !empty($queues))
-                @foreach($queues as $queue)
+                @if(isset($channel->queues) && !empty($channel->queues))
+                @foreach($channel->queues as $queue)
                 <div class="panel-group">
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <h4 class="panel-title">
-                                <a class="accordion-toggle @if($queue->id != $channel->active || !$queue->is_open)collapsed @endif" data-toggle="collapse" href="#c{{$queue->id}}">Queue: <b>{{$queue->name}}</b>@if($queue->id == $channel->active), status: <b> @if($queue->is_open == 1)Open @else Closed @endif </b>@endif</a>
+                                <a class="accordion-toggle @if($queue->id != $channel->active || !$queue->is_open)collapsed @endif" data-toggle="collapse" href="#c{{ $queue->id }}">Queue: <b>{{ $queue->name }}</b>@if($queue->id == $channel->active), status: <b> @if($queue->is_open == 1)Open @else Closed @endif </b>@endif</a>
                             </h4>
                         </div>
-                        <div id="c{{$queue->id}}" class="panel-collapse collapse @if($queue->id == $channel->active && $queue->is_open == 1)in @endif">
+                        <div id="c{{ $queue->id }}" class="panel-collapse collapse @if($queue->id == $channel->active && $queue->is_open == 1)in @endif">
                             <ul class="list-group">
-                                @if(isset($queue->users) && !empty($queue->users))
-                                @foreach($queue->users as $i => $user)
-                                <li class="list-group-item">{{$i+1}}. {{$user->user->displayName}}<span class="badge badge-primary badge-pill">Remove / Promote ID: {{$user->id}}</span>
-                                    @if(trim($user->message) != "")<blockquote class="user-message">{{$user->message}}</blockquote>@endif
+                                @if(isset($queue->queueUsers) && !empty($queue->queueUsers))
+                                @foreach($queue->queueUsers as $i => $user)
+                                <li class="list-group-item">{{ $i+1 }}. {{ $user->user->displayName }}
+                                    @if(trim($user->message) != "")<blockquote class="user-message">{{ $user->message }}</blockquote>@endif
                                 </li>
                                 @endforeach
                                 @else

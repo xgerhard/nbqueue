@@ -13,5 +13,10 @@ class User extends Model
         'name',
         'displayName'
     ];
+
+    public function channel()
+    {
+        return $this->hasOne('App\src\Channel', 'user_id', 'id');
+    }
 }
 ?>
