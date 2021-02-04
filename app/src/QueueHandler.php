@@ -106,7 +106,7 @@ class QueueHandler
             {
                 $aUsers[] = $oQueueUser->user->displayName;
             }
-            return $this->returnText('Next '. (count($aUsers) > 1 ? count($aUsers) .' persons' : 'person') .' in the queue "'. $this->channel->activeQueue->name .'": '. implode(', ', $aUsers));
+            return $this->returnText('Next '. (count($aUsers) > 1 ? count($aUsers) .' persons' : 'person') .' in the queue "'. $this->channel->activeQueue->name .'": @'. implode(', @', $aUsers));
         }
     }
 
@@ -161,7 +161,7 @@ class QueueHandler
                     $oQueueUser->forceDelete();
                 }
             }
-            return $this->returnText('Next '. (count($aUsers) > 1 ? count($aUsers) .' persons' : 'person') .' in the queue "'. $this->channel->activeQueue->name .'": '. implode(", ", $aUsers));
+            return $this->returnText('Next '. (count($aUsers) > 1 ? count($aUsers) .' persons' : 'person') .' in the queue "'. $this->channel->activeQueue->name .'": @'. implode(', @', $aUsers));
         }
     }
 
