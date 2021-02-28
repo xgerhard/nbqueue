@@ -3,6 +3,7 @@
 namespace App\src;
 
 use App\src\Queue;
+use App\src\TwitchAPI;
 use Exception;
 use DB;
 
@@ -56,6 +57,62 @@ class QueueHandler
             $strRes .= '. Available queues: ['. implode(', ', $aQueueNames) .']';
         }
         return $this->returnText($strRes);
+    }
+
+    public function getTwitchUser($strUsername)
+    {
+        $oUser = User::where([['name', '=', $strUsername], ['provider', '=', 'twitch']])->first();
+        if(!$oUser)
+        {
+            $oTwitchAPI = new TwitchAPI;
+            $aUsers = $oTwitchAPI->getUsers($strUsername);
+            if(!empty($aUsers))
+            {
+                foreach($aUsers as $oTwitchUser)
+                {
+                    if(strtolower($oTwitchUser->login) == strtolower($strUsername))
+                    {
+                        return User::create([
+                            'provider' => 'twitch',
+                            'provider_id' => $oTwitchUser->id,
+                            'name' => $oTwitchUser->login,
+                            'displayName' => $oTwitchUser->display_name,
+                        ]);
+                    }
+                }
+            }
+            return false;
+        }
+        return $oUser;
+    }
+
+    public function addUser($strUsername)
+    {
+        if(!$this->isAllowed('moderator'))
+            return $this->returnText(self::ERR_NO_MOD);
+
+        if(!$this->user->provider == 'twitch')
+            return $this->returnText('Manual adding users is only available for Twitch channels');
+
+        $strUsername = trim($strUsername);
+        $oUser = $this->getTwitchUser($strUsername);
+        if($oUser)
+        {
+            $oQueueUser = $this->channel->activeQueue->getUser($oUser->id);
+            if(!$oQueueUser)
+            {
+                $oQueueUser = QueueUser::create([
+                    'user_id' => $oUser->id,
+                    'queue_id' => $this->channel->active,
+                    'user_level' => $this->channel->activeQueue->user_level
+                ]);
+
+                if($oQueueUser)
+                    return $this->returnText('Successfully added "'. $oUser->displayName .'" to queue "'. $this->channel->activeQueue->name . '", position #'. $this->getPosition($oQueueUser, false));
+            }
+            else return $this->returnText('User "'. $oUser->displayName .'" already in queue "'. $this->channel->activeQueue->name .'", position #'. $this->getPosition($oQueueUser, false));
+        }
+        else return $this->returnText('Unable to find user "'. $strUsername .'"'); 
     }
 
     /**

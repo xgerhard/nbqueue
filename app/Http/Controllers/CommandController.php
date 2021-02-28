@@ -49,6 +49,10 @@ class CommandController extends BaseController
 
                     switch($strAction)
                     {
+                        case 'adduser':
+                            return $oQH->addUser($strMessage);
+                        break;
+
                         case 'join':
                             return $oQH->joinQueue($strMessage);
                         break;
@@ -163,7 +167,8 @@ class CommandController extends BaseController
             'who',
             'random',
             'promote',
-            'setlimit'
+            'setlimit',
+            'adduser'
         );
         if(in_array($strAction, $aActions)) return $strAction;
         return false;

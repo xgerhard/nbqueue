@@ -21,6 +21,16 @@
                 </div>
             </div>
 
+            @if($channel->channelOwner->provider == 'twitch')
+            <div class="alert alert-info alert-dismissible" role="alert">
+                <strong>Info for moderators:</strong> you can now manually add users to the active queue, usage: 
+                <strong>!q adduser xgerhard</strong> to add user <strong>xgerhard</strong>.
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            @endif
+
             <div class="alert alert-info alert-dismissible" role="alert">
                 <strong>Info for moderators:</strong> you might have noticed the Remove / Promote ID is gone from this page, instead you can now use the queue position of the user to remove or promote the user. The usage will be the same: 
                 <strong>!q remove 2</strong> or <strong>!q promote 2</strong>, to remove / promote the second user in the queue.
