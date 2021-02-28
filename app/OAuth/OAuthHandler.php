@@ -100,10 +100,9 @@ class OAuthHandler
     */
     private function getTokens($strCode, $bRefresh = false)
     {
-        // Guzzle should be easy to use hmm
         $oClient = new Client([
-            'http_errors' => false, 
-            'verify' => false
+            'http_errors' => false,
+            // 'verify' => false
         ]);
 
         $oResponse = $oClient->request('POST', $this->provider->token_url, [
@@ -115,6 +114,33 @@ class OAuthHandler
             ]
         ]);
         return json_decode($oResponse->getBody()->getContents());
+    }
+
+    public function getAppTokens()
+    {
+        $a = [
+            'client_id'    => $this->provider->client_id,
+            'client_secret' => $this->provider->client_secret,
+            'grant_type' => 'client_credentials'
+        ];
+
+        $oClient = new Client([
+            'http_errors' => false,
+            // 'verify' => false
+        ]);
+
+        $oResponse = $oClient->request('POST', $this->provider->token_url .'?'. http_build_query($a));
+        $oTokens = json_decode($oResponse->getBody()->getContents());
+        if(isset($oTokens->access_token) && isset($oTokens->expires_in))
+        {
+            $OAuthSession = new OAuthSession;
+            $OAuthSession->access_token = $oTokens->access_token;
+            $OAuthSession->expires_in = Carbon::now()->addSeconds($oTokens->expires_in);
+            $OAuthSession->provider_id = $this->provider->id;
+            $OAuthSession->save();
+            return $OAuthSession;
+        }
+        return false;
     }
 
     /*
@@ -175,7 +201,6 @@ class OAuthHandler
             
             case 'invalid_client':
                 $strError = 'Something went wrong';
-                // this should never happen, need to log this.
             break;
 
             case 'invalid_grant':
@@ -185,7 +210,6 @@ class OAuthHandler
             default:
                 $strError = 'Something went wrong';
         }
-        // Todo: Log errors.
         throw new Exception($strError);
     }
 }
