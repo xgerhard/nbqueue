@@ -5,7 +5,7 @@ use GuzzleHttp\Client;
 use Exception;
 use Log;
 use App\OAuth\OAuthProvider;
-use App\Oauth\OAuthHandler;
+use App\OAuth\OAuthHandler;
 use Carbon\Carbon;
 
 class TwitchAPI
