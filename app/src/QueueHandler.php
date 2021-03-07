@@ -86,7 +86,7 @@ class QueueHandler
         return $oUser;
     }
 
-    public function addUser($strUsername)
+    public function addUser($strMessage)
     {
         if(!$this->isAllowed('moderator'))
             return $this->returnText(self::ERR_NO_MOD);
@@ -94,8 +94,23 @@ class QueueHandler
         if(!$this->user->provider == 'twitch')
             return $this->returnText('Manual adding users is only available for Twitch channels');
 
-        $strUsername = trim($strUsername);
-        $oUser = $this->getTwitchUser($strUsername);
+        $strMessage = trim($strMessage);
+        if($strMessage == '')
+            return $this->returnText('Please provide a username to add to the queue');
+
+        $aMessage = explode(' ', $strMessage);
+        $strUsername = $aMessage[0];
+        array_shift($aMessage);
+
+        try
+        {
+            $oUser = $this->getTwitchUser($strUsername);
+        }
+        catch(Exception $e)
+        {
+            return $this->returnText('Failed to get user info');
+        }
+
         if($oUser)
         {
             $oQueueUser = $this->channel->activeQueue->getUser($oUser->id);
@@ -104,7 +119,8 @@ class QueueHandler
                 $oQueueUser = QueueUser::create([
                     'user_id' => $oUser->id,
                     'queue_id' => $this->channel->active,
-                    'user_level' => $this->channel->activeQueue->user_level
+                    'user_level' => $this->channel->activeQueue->user_level,
+                    'message' => empty($aMessage) ? '' : implode(' ', $aMessage)
                 ]);
 
                 if($oQueueUser)

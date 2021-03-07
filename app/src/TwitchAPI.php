@@ -56,7 +56,7 @@ class TwitchAPI
 
         $oClient = new Client([
             'http_errors' => false, 
-             'verify' => false
+            //'verify' => false
         ]);
 
         $oResponse = $oClient->request($strMethod, $strUrl, $aRequestData);

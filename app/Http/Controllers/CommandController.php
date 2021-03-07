@@ -12,11 +12,11 @@ class CommandController extends BaseController
     {
         if($request->has('q'))
         {
-            $aQuery = explode(" ", trim($request->input('q')));
+            $aQuery = explode(' ', trim($request->input('q')));
             if(!empty($aQuery) && $strAction = $this->getAction($aQuery[0]))
             {
                 array_shift($aQuery);
-                $strMessage = empty($aQuery) ? "" : urldecode(implode(" ", $aQuery));
+                $strMessage = empty($aQuery) ? '' : urldecode(implode(' ', $aQuery));
                 $oNbHeaders = new nbheaders();
 
                 // If APP_DEBUG is set to true in your .env, you can set a test user & channel here, so the script works from the browser.
