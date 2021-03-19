@@ -43,9 +43,12 @@ class CommandController extends BaseController
                     return 'This command only works through Nightbot.';
                 }
 
-                try{
-                    $oQH = new QueueHandler($oNbHeaders->getChannel());
-                    if($oNbHeaders->getUser()) $oQH->setUser($oNbHeaders->getUser());
+                try
+                {
+                    $oQH = new QueueHandler($oNbHeaders->getChannel(), $request->get('token', ''));
+
+                    if($oNbHeaders->getUser())
+                        $oQH->setUser($oNbHeaders->getUser());
 
                     switch($strAction)
                     {

@@ -20,13 +20,10 @@ class QueueHandler
      * Runs 'start' function on load, we need to have a channel and queue object to start
      *
     */
-    public function __construct($oChannel)
+    public function __construct($oChannel, $strToken)
     {
-        if(!$this->start($oChannel))
-        {
-            return $this->returnText(self::ERR_DEFAULT);
-            die;
-        }
+        if(!$this->start($oChannel, $strToken))
+            throw new Exception(self::ERR_DEFAULT);
     }
 
     public function getQueueUserByPosition($iPosition)
@@ -409,7 +406,7 @@ class QueueHandler
      *
      * @return boolean
     */
-    private function start($oNbChannel)
+    private function start($oNbChannel, $strToken)
     {
         $oChannelOwner = $this->getUserInfo($oNbChannel);
         if($oChannelOwner)
@@ -417,6 +414,7 @@ class QueueHandler
             if($oChannelOwner->channel)
             {
                 $this->channel = $oChannelOwner->channel;
+                $this->validateToken($strToken);
             }
             else
             {
@@ -438,7 +436,8 @@ class QueueHandler
                     $oChannel = Channel::create([
                         'provider' => '',
                         'provider_id' => '',
-                        'user_id' => $oChannelOwner->id
+                        'user_id' => $oChannelOwner->id,
+                        'token' => $strToken
                     ]);
     
                     if($oChannel)
@@ -754,6 +753,25 @@ class QueueHandler
             return $aUserLevels[$xUserLevel];
 
         return false;
+    }
+
+    private function validateToken($strToken)
+    {
+        if(!$this->channel->token)
+        {
+            if(trim($strToken) != '')
+            {
+                $this->channel->token = $strToken;
+                $this->channel->save();
+            }
+        }
+        else
+        {
+            if($this->channel->token == $strToken)
+                return true;
+
+            throw new Exception('Invalid token');
+        }
     }
 }
 ?>

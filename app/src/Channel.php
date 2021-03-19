@@ -10,7 +10,8 @@ class Channel extends Model
         'provider_id',
         'active',
         'user_id',
-        'lang'
+        'lang',
+        'token'
     ];
 
     public function channelOwner()
