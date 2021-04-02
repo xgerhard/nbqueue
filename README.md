@@ -28,7 +28,7 @@ The command supports multiple queues, but there can only be one active. Only the
 * __adduser $name__ - Will add user $username to the current active queue (Twitch only)
 
 # Installation
-Sign in with Nightbot here, the installer will add the selected commands to Nightbot: https://2g.be/twitch/nbqueue/public/install/auto
+Sign in with Nightbot here, the installer will add the selected commands to Nightbot: https://nbq.gerhard.dev/install/auto
 
 ## Improvements?
 * In the current system the user can only join the active queue. Since the system supports multiple queues, maybe add a parameter to join another queue (if they are open). However there will need to be a good syntax for it first, since everything after !join is currently saved as message, for example to store their gamertag. Maybe something like `!join "$queue" $message` - `!join "fortnite" xgerhard`.

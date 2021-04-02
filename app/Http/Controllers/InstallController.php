@@ -129,7 +129,7 @@ class InstallController extends BaseController
                 'name' => '!q',
                 'description' => 'This command handles all functionalities of the queue system, it must be installed for the queue system to work.',
                 'main_command' => true,
-                'code' => '$(urlfetch https://2g.be/twitch/nbqueue/public/?q=$(querystring)&token='. $this->genRandom() .')'
+                'code' => '$(urlfetch https://nbq.gerhard.dev?q=$(querystring)&token='. $this->genRandom() .')'
             ],
             'join' => [
                 'name' => '!join',
