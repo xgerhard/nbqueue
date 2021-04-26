@@ -14,7 +14,7 @@
             <div class="row mb">
                 <div class="pull-right">
                     Show user messages:
-                     <div class="btn-group btn-toggle"> 
+                     <div id="messages-toggle"class="btn-group btn-toggle"> 
                         <button class="btn btn-default btn-sm">ON</button>
                         <button class="btn btn-default active btn-sm">OFF</button>
                     </div>
@@ -85,9 +85,31 @@
             }
         </style>
         <script>
-            $('.btn-toggle').click(function() {
-                $(this).find('.btn').toggleClass('active');
-                $('.user-message').toggle();
+            $(function() {
+                var hideMessages = getSetting('hide-messages');
+                hideMessages = hideMessages === null ? true : (hideMessages == 'false') ? false : true;
+
+                if (!hideMessages) {
+                    toggleHideMessages();
+                }
+
+                $('.btn-toggle').click(function() {
+                    setSetting('hide-messages', hideMessages ? false : true);
+                    toggleHideMessages();
+                });
+
+                function toggleHideMessages() {
+                    $('#messages-toggle').find('.btn').toggleClass('active');
+                    $('.user-message').toggle();
+                }
+
+                function getSetting($key) {
+                    return localStorage.getItem($key);
+                }
+
+                function setSetting($key, $value) {
+                    localStorage.setItem($key, $value);
+                }
             });
         </script>
     </body>
