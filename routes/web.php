@@ -24,6 +24,6 @@ $router->get('install/manual', 'InstallController@startManual');
 $router->get('/', 'CommandController@QueryParser');
 
 // Remove /list/ from the subdomain
-$strListPath = explode('.', $_SERVER['HTTP_HOST'])[0] === 'nbq' ? '' : 'list';
+$strListPath = isset($_SERVER['HTTP_HOST']) ? (explode('.', $_SERVER['HTTP_HOST'])[0] === 'nbq' ? '' : 'list') : '';
 
 $router->get($strListPath .'/{channelId}[/{name}]', 'QueueController@list');
