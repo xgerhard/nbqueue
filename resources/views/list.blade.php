@@ -21,16 +21,6 @@
                 </div>
             </div>
 
-            @if($channel->channelOwner->provider == 'twitch')
-            <div class="alert alert-info alert-dismissible" role="alert">
-                <strong>Info for moderators:</strong> you can now manually add users to the active queue, usage: 
-                <strong>!q adduser xgerhard</strong> to add user <strong>xgerhard</strong>.
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            @endif
-
             <div class="row">
                 @if(isset($channel->queues) && !empty($channel->queues))
                 @foreach($channel->queues as $queue)
