@@ -659,7 +659,7 @@ class QueueHandler
     public function returnText($strMessage)
     {
         $strReturnMessage = '';
-        $strMessage = str_replace('queue "default"', 'queue', $strMessage);
+        $strMessage = str_replace('ueue "default"', 'ueue', $strMessage);
         if($this->user)
             $strReturnMessage .= '@'. $this->user->displayName .': ';
 
