@@ -28,10 +28,10 @@
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <h4 class="panel-title">
-                                <a class="accordion-toggle @if($queue->id != $channel->active || !$queue->is_open)collapsed @endif" data-toggle="collapse" href="#c{{ $queue->id }}">Queue: <b>{{ $queue->name }}</b>@if($queue->id == $channel->active) | Status: <b> @if($queue->is_open == 1)Open @else Closed @endif</b>@endif @if($queue->max_users > 0) | Limit: <b>{{ count($queue->queueUsers) }}/{{ $queue->max_users}}</b>@endif</a>
+                                <a class="accordion-toggle @if($queue->id != $channel->active)collapsed @endif" data-toggle="collapse" href="#c{{ $queue->id }}">Queue: <b>{{ $queue->name }}</b>@if($queue->id == $channel->active) | Status: <b> @if($queue->is_open == 1)Open @else Closed @endif</b>@endif @if($queue->max_users > 0) | Limit: <b>{{ count($queue->queueUsers) }}/{{ $queue->max_users}}</b>@endif</a>
                             </h4>
                         </div>
-                        <div id="c{{ $queue->id }}" class="panel-collapse collapse @if($queue->id == $channel->active && $queue->is_open == 1)in @endif">
+                        <div id="c{{ $queue->id }}" class="panel-collapse collapse @if($queue->id == $channel->active)in @endif">
                             <ul class="list-group">
                                 @if(isset($queue->queueUsers) && !empty($queue->queueUsers))
                                 @foreach($queue->queueUsers as $i => $user)
