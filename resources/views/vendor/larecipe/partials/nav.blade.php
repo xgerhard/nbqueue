@@ -27,27 +27,9 @@
                 </larecipe-button>
             @endif
 
-            <larecipe-button tag="a" href="https://github.com/saleem-hadad/larecipe" target="__blank" type="black" class="mx-2 px-4">
+            <larecipe-button tag="a" href="https://github.com/xgerhard/nbqueue" target="__blank" type="black" class="mx-2 px-4">
                 <i class="fab fa-github"></i>
             </larecipe-button>
-
-            {{-- versions dropdown --}}
-            <larecipe-dropdown>
-                <larecipe-button type="primary" class="flex">
-                    {{ $currentVersion }} <i class="mx-1 fa fa-angle-down"></i>
-                </larecipe-button>
-
-                <template slot="list">
-                    <ul class="list-reset">
-                        @foreach ($versions as $version)
-                            <li class="py-2 hover:bg-grey-lightest">
-                                <a class="px-6 text-grey-darkest" href="{{ route('larecipe.show', ['version' => $version, 'page' => $currentSection]) }}">{{ $version }}</a>
-                            </li>
-                        @endforeach
-                    </ul>
-                </template>
-            </larecipe-dropdown>
-            {{-- /versions dropdown --}}
 
             @auth
                 {{-- account --}}
