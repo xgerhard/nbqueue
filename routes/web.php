@@ -26,7 +26,13 @@ Route::get('/install/manual', [InstallController::class, 'startManual']);
 Route::get('/status', [StatusController::class, 'index']);
 Route::get('/', [CommandController::class, 'QueryParser']);
 
-// Remove /list/ from the subdomain
-$strListPath = explode('.', isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'])[0] === 'nbq' ? '' : 'list';
+Route::get('/list/{channelId?}/{name?}', function ($channelId = null) {
+    if(!$channelId)
+        return redirect('/docs');
+    else
+        return redirect()->action(
+            [QueueController::class, 'list'], ['channelId' => $channelId]
+        );
+});
 
-Route::get('/'. $strListPath .'/{channelId}/{name?}', [QueueController::class, 'list']);
+Route::get('/{channelId}/{name?}', [QueueController::class, 'list']);

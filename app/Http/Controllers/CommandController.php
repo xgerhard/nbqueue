@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\src\QueueHandler;
 use xgerhard\nbheaders\nbheaders;
+use Log;
 
 class CommandController extends Controller
 {
@@ -14,165 +15,135 @@ class CommandController extends Controller
         if($request->has('q'))
         {
             $aQuery = explode(' ', trim($request->input('q')));
-            if(!empty($aQuery) && $strAction = $this->getAction($aQuery[0]))
+            $strAction = !empty($aQuery) ? trim(strtolower(array_shift($aQuery))) : 'default';
+
+            $strMessage = empty($aQuery) ? '' : urldecode(implode(' ', $aQuery));
+            $oNbHeaders = new nbheaders();
+
+            // If APP_DEBUG is set to true in your .env, you can set a test user & channel here, so the script works from the browser.
+            // This will manually set the request headers that are normally send by Nightbot urlFetch: https://docs.nightbot.tv/commands/variables/urlfetch
+            if(env('APP_DEBUG'))
             {
-                array_shift($aQuery);
-                $strMessage = empty($aQuery) ? '' : urldecode(implode(' ', $aQuery));
-                $oNbHeaders = new nbheaders();
+                $oNbHeaders->setUser([
+                    'name' => 'xgerhard',
+                    'displayName' => 'xgerhard',
+                    'provider' => 'twitch',
+                    'providerId' => '12345678',
+                    'userLevel' => 'owner'
+                ]);
+                $oNbHeaders->setChannel([
+                    'name' => 'xgerhard',
+                    'displayName' => 'xgerhard',
+                    'provider' => 'twitch',
+                    'providerId' => '12345678'
+                ]);
+            }
 
-                // If APP_DEBUG is set to true in your .env, you can set a test user & channel here, so the script works from the browser.
-                // This will manually set the request headers that are normally send by Nightbot urlFetch: https://docs.nightbot.tv/commands/variables/urlfetch
-                if(env('APP_DEBUG'))
+            if(!$oNbHeaders->isNightbotRequest())
+            {
+                return 'This command only works through Nightbot.';
+            }
+
+            try
+            {
+                $oQH = new QueueHandler($oNbHeaders->getChannel());
+                if($oNbHeaders->getUser()) $oQH->setUser($oNbHeaders->getUser());
+
+                switch($strAction)
                 {
-                    $oNbHeaders->setUser([
-                        'name' => 'xgerhard',
-                        'displayName' => 'xgerhard',
-                        'provider' => 'twitch',
-                        'providerId' => '12345678',
-                        'userLevel' => 'owner'
-                    ]);
-                    $oNbHeaders->setChannel([
-                        'name' => 'xgerhard',
-                        'displayName' => 'xgerhard',
-                        'provider' => 'twitch',
-                        'providerId' => '12345678'
-                    ]);
-                }
+                    case 'adduser':
+                        return $oQH->addUser($strMessage);
+                    break;
 
-                if(!$oNbHeaders->isNightbotRequest())
-                {
-                    return 'This command only works through Nightbot.';
-                }
+                    case 'join':
+                        return $oQH->joinQueue($strMessage);
+                    break;
 
-                try{
-                    $oQH = new QueueHandler($oNbHeaders->getChannel());
-                    if($oNbHeaders->getUser()) $oQH->setUser($oNbHeaders->getUser());
+                    case 'leave':
+                        return $oQH->leaveQueue();
+                    break;
 
-                    switch($strAction)
-                    {
-                        case 'adduser':
-                            return $oQH->addUser($strMessage);
-                        break;
+                    case 'position':
+                        return $oQH->getPosition();
+                    break;
 
-                        case 'join':
-                            return $oQH->joinQueue($strMessage);
-                        break;
+                    case 'list':
+                        return $oQH->getList();
+                    break;
 
-                        case 'leave':
-                            return $oQH->leaveQueue();
-                        break;
+                    case 'info':
+                        return $oQH->info();
+                    break;
 
-                        case 'position':
-                            return $oQH->getPosition();
-                        break;
+                    case 'open':
+                        return $oQH->openQueue();
+                    break;
 
-                        case 'list':
-                            return $oQH->getList();
-                        break;
+                    case 'close':
+                        return $oQH->closeQueue();
+                    break;
 
-                        case 'info':
-                            return $oQH->info();
-                        break;
+                    case 'next':
+                        return $oQH->getNext($strMessage, false);
+                    break;
 
-                        case 'open':
-                            return $oQH->openQueue();
-                        break;
+                    case 'random':
+                        return $oQH->getNext($strMessage, true);
+                    break;
 
-                        case 'close':
-                            return $oQH->closeQueue();
-                        break;
+                    case 'who':
+                        return $oQH->getListQueue((int) $strMessage);
+                    break;
 
-                        case 'next':
-                            return $oQH->getNext($strMessage, false);
-                        break;
+                    case 'clear':
+                        return $oQH->clearQueue();
+                    break;
 
-                        case 'random':
-                            return $oQH->getNext($strMessage, true);
-                        break;
+                    case 'add':
+                        return $oQH->addQueue($strMessage, 1, true);
+                    break;
 
-                        case 'who':
-                            return $oQH->getListQueue((int) $strMessage);
-                        break;
+                    case 'del':
+                        return $oQH->deleteQueue($strMessage);
+                    break;
 
-                        case 'clear':
-                            return $oQH->clearQueue();
-                        break;
+                    case 'set':
+                        return $oQH->setQueue($strMessage);
+                    break;
 
-                        case 'add':
-                            return $oQH->addQueue($strMessage, 1, true);
-                        break;
+                    case 'userlevel':
+                    case 'ul':
+                        return $oQH->setUserLevel($strMessage);
+                    break;
 
-                        case 'del':
-                            return $oQH->deleteQueue($strMessage);
-                        break;
+                    case 'remove':
+                        return $oQH->removeQueueUser($strMessage);
+                    break;
 
-                        case 'set':
-                            return $oQH->setQueue($strMessage);
-                        break;
+                    case 'promote':
+                        return $oQH->promoteUser((int) $strMessage);
+                    break;
 
-                        case 'userlevel':
-                        case 'ul':
-                            return $oQH->setUserLevel($strMessage);
-                        break;
+                    case 'setlimit':
+                        return $oQH->setQueueLimit($strMessage);
+                    break;
 
-                        case 'remove':
-                            return $oQH->removeQueueUser($strMessage);
-                        break;
+                    case 'help':
+                        return 'See '. secure_url('/docs') .' for usage info';
+                    break;
 
-                        case 'promote':
-                            return $oQH->promoteUser((int) $strMessage);
-                        break;
-
-                        case 'setlimit':
-                            return $oQH->setQueueLimit($strMessage);
-                        break;
-
-                        case 'help':
-                            return 'Please see www.url.com for more info on usage';
-                        break;
-
-                        default:
-                            return 'Unknown command, please see www.url.com for more info on usage';
-                        break;
-                    }
-                }
-                catch(Exception $e)
-                {
-                    dd($e);
+                    default:
+                        return 'Invalid action, available actions: add, remove, join, leave, position. See '. secure_url('/docs') .' for full list of commands';
+                    break;
                 }
             }
-            else return 'Invalid action, available actions: add, remove, join, leave, position';
+            catch(Exception $e)
+            {
+                Log::error($e);
+                return 'Something went wrong..';
+            }
         }
-        else return 'Invalid request';
-    }
-
-    public function getAction($strAction)
-    {
-        $strAction = strtolower(trim($strAction));
-        $aActions = array(
-            'add',
-            'set',
-            'del',
-            'list',
-            'join' ,
-            'leave',
-            'position',
-            'open',
-            'close',
-            'next',
-            'clear',
-            'info',
-            'remove',
-            'userlevel',
-            'ul',
-            'who',
-            'random',
-            'promote',
-            'setlimit',
-            'adduser'
-        );
-        if(in_array($strAction, $aActions)) return $strAction;
-        return false;
+        else return redirect('/docs');
     }
 }
 ?>
