@@ -1,4 +1,5 @@
 <?php
+
 namespace App\OAuth;
 
 use Exception;
@@ -6,7 +7,6 @@ use App\OAuth\OAuthProvider;
 use App\OAuth\OAuthSession;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
-use App\src\Session;
 use Log;
 
 class OAuthHandler
@@ -26,8 +26,8 @@ class OAuthHandler
             // Validate state
             if(
                 $request->input('state') === null ||
-                !Session::has('state') ||
-                $request->input('state') != Session::pull('state')
+                !session()->has('state') ||
+                $request->input('state') != session()->pull('state')
             )
             throw new Exception('Invalid state parameter');
 
@@ -44,7 +44,7 @@ class OAuthHandler
             $OAuthSession->provider_id = $this->provider->id;
             $OAuthSession->save();
 
-            Session::put($this->provider->name .'-auth', $OAuthSession->id);
+            session()->put($this->provider->name .'-auth', $OAuthSession->id);
 
             redirect($this->provider->local_redirect)->send();
             //return $OAuthSession->access_token;
@@ -74,7 +74,7 @@ class OAuthHandler
     {
         // Create and save state
         $strState = $this->generateState();
-        Session::put('state', $strState);
+        session()->put('state', $strState);
 
         // Build url
         return $this->provider->auth_url .'&state='. $strState .'&client_id='. $this->provider->client_id 
@@ -125,17 +125,19 @@ class OAuthHandler
         ];
 
         $oClient = new Client([
-            'http_errors' => false,
-            // 'verify' => false
+            'http_errors' => false
         ]);
 
         $oResponse = $oClient->request('POST', $this->provider->token_url .'?'. http_build_query($a));
         $oTokens = json_decode($oResponse->getBody()->getContents());
+
         if(isset($oTokens->access_token) && isset($oTokens->expires_in))
         {
             $OAuthSession = new OAuthSession;
             $OAuthSession->access_token = $oTokens->access_token;
             $OAuthSession->expires_in = Carbon::now()->addSeconds($oTokens->expires_in);
+            $OAuthSession->refresh_token = false;
+            $OAuthSession->refresh_expires_in = Carbon::now()->addSeconds($oTokens->expires_in);
             $OAuthSession->provider_id = $this->provider->id;
             $OAuthSession->save();
             return $OAuthSession;

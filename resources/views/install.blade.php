@@ -37,6 +37,7 @@
             </p>
             @if(isset($commands) && !empty($commands))
             <form action="" method="POST">
+                @csrf
                 <table class="table table-striped">
                     <thead>
                         <tr>
@@ -58,7 +59,7 @@
                 </table>
                 <p>
                     <b>Note:</b> Commands in your Nightbot that already exist with command codes from the table above will be <b>overwritten</b>, please double check to make sure no commands will be lost. <br/>
-                    <br/><input type="checkbox" name="agreement" required/> I double checked the commands names, existing commands may be overwritten.
+                    <br/><input type="checkbox" name="agreement" required/> I double checked the commands names, existing commands <b>will</b> be overwritten.
                 </p>
                 <input class="btn btn-primary" type="submit" value="Install commands">
             </form>

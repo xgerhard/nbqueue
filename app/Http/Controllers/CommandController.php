@@ -1,12 +1,13 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Laravel\Lumen\Routing\Controller as BaseController;
+use App\Http\Controllers\Controller;
 use App\src\QueueHandler;
 use xgerhard\nbheaders\nbheaders;
 
-class CommandController extends BaseController
+class CommandController extends Controller
 {
     public function QueryParser(Request $request)
     {

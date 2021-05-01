@@ -1,18 +1,18 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use Laravel\Lumen\Routing\Controller as BaseController;
+use App\Http\Controllers\Controller;
 use App\OAuth\OAuthHandler;
-use App\src\Session;
 use App\src\NightbotAPI;
 use Illuminate\Http\Request;
 
-class InstallController extends BaseController
+class InstallController extends Controller
 {
     public function startAuto()
     {
         if(!$this->isLoggedIn()) return $this->renderLogin();
-        return view('install', ['commands' => $this->getQueueCommands()]);
+        return view('install', ['commands' => $this->getQueueCommands(), 'errors' => []]);
     }
 
     public function startManual()
@@ -64,11 +64,6 @@ class InstallController extends BaseController
             }
         }
 
-        if(empty($aCommandNames))
-        {
-            $aErrors[] = 'No command selected to add.';
-        }
-
         if(empty($aErrors))
         {
             $oNightbotAPI = new NightbotApi($strAccessToken);
@@ -109,7 +104,7 @@ class InstallController extends BaseController
     public function isLoggedIn()
     {
         $OAuthHandler = new OAuthHandler('Nightbot');
-        if(Session::has('Nightbot-auth') && $login = $OAuthHandler->isAuthValid(Session::pull('Nightbot-auth'), true))
+        if(session()->has('Nightbot-auth') && $login = $OAuthHandler->isAuthValid(session()->get('Nightbot-auth'), true))
         {
             return $login;
         }

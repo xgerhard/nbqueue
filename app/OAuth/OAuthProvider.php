@@ -1,4 +1,5 @@
 <?php
+
 namespace App\OAuth;
 
 use Illuminate\Database\Eloquent\Model;

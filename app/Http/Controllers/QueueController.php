@@ -1,10 +1,11 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use App\src\Channel;
-use Laravel\Lumen\Routing\Controller as BaseController;
+use App\Models\Channel;
+use App\Http\Controllers\Controller;
 
-class QueueController extends BaseController
+class QueueController extends Controller
 {
     public function list($channelId, $channelName = false)
     {

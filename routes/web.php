@@ -1,29 +1,32 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\InstallController;
+use App\Http\Controllers\CommandController;
+use App\Http\Controllers\QueueController;
+use App\Http\Controllers\StatusController;
+
 /*
 |--------------------------------------------------------------------------
-| Application Routes
+| Web Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register all of the routes for an application.
-| It is a breeze. Simply tell Lumen the URIs it should respond to
-| and give it the Closure to call when that URI is requested.
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
 |
 */
-use App\src\Channel;
-use App\src\Queue;
-use App\src\QueueUser;
-use App\src\User;
+Route::get('/auth/{service}', [AuthController::class, 'AuthHandler']);
 
-$router->get('auth/{service}', 'AuthController@AuthHandler');
+Route::get('/install/auto', [InstallController::class, 'startAuto']);
+Route::post('/install/auto', [InstallController::class, 'installAuto']);
+Route::get('/install/manual', [InstallController::class, 'startManual']);
 
-$router->get('install/auto', 'InstallController@startAuto');
-$router->post('install/auto', 'InstallController@installAuto');
-$router->get('install/manual', 'InstallController@startManual');
-
-$router->get('/', 'CommandController@QueryParser');
+Route::get('/status', [StatusController::class, 'index']);
+Route::get('/', [CommandController::class, 'QueryParser']);
 
 // Remove /list/ from the subdomain
-$strListPath = isset($_SERVER['HTTP_HOST']) ? (explode('.', $_SERVER['HTTP_HOST'])[0] === 'nbq' ? '' : 'list') : '';
+$strListPath = explode('.', isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'])[0] === 'nbq' ? '' : 'list';
 
-$router->get($strListPath .'/{channelId}[/{name}]', 'QueueController@list');
+Route::get('/'. $strListPath .'/{channelId}/{name?}', [QueueController::class, 'list']);

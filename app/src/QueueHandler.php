@@ -2,7 +2,10 @@
 
 namespace App\src;
 
-use App\src\Queue;
+use App\Models\Queue;
+use App\Models\User;
+use App\Models\QueueUser;
+use App\Models\Channel;
 use App\src\TwitchAPI;
 use Exception;
 use DB;
