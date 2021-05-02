@@ -16,7 +16,7 @@ Hi there 👋, NBQueue is a queue system for Nightbot. Easily setup and manage q
 <a name="requirements"></a>
 ## Requirements
 
-NBQueue is made for Nightbot, how to setup Nightbot:
+NBQueue is made for Nightbot, all you need is a Nightbot account. How to setup Nightbot:
 1. Login at: [Nightbot.tv](https://Nightbot.tv)
 2. Hit `Join channel` top right of the Nightbot dashboard
 
