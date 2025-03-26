@@ -3,6 +3,9 @@
 namespace App\src;
 
 use App\src\Queue;
+use App\src\User;
+use App\src\QueueUser;
+use App\src\Channel;
 use App\src\TwitchAPI;
 use Exception;
 use DB;
@@ -15,6 +18,7 @@ class QueueHandler
 
     private $channel = null;
     private $user = null;
+    private $messageLength = 200;
 
     /**
      * Runs 'start' function on load, we need to have a channel and queue object to start
@@ -27,6 +31,8 @@ class QueueHandler
             return $this->returnText(self::ERR_DEFAULT);
             die;
         }
+
+        $this->messageLength = $oChannel->getProvider() == 'youtube' ? 200 : 400;
     }
 
     public function getQueueUserByPosition($iPosition)
@@ -194,7 +200,7 @@ class QueueHandler
             return $this->returnText(self::ERR_NO_MOD);
 
         $iChars = 0;
-        $iCharLimit = 150;
+        $iCharLimit = $this->messageLength - 50;
         $iLimit = 1;
         $iUserLevel = 1;
         $aMessage = array_values(array_filter(explode(' ', $strMessage)));
